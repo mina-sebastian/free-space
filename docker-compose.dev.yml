@@ -1,6 +1,9 @@
 version: "3"
 
 services:
+#####################################################################
+# nginx
+#####################################################################
   nginx:
     container_name: nginx
     build:
@@ -12,9 +15,12 @@ services:
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     networks:
-      - my_network
+      - frspc_network
 
 
+#####################################################################
+# mysql
+#####################################################################
   mysql:
     container_name: mysql
     image: mysql:8.0
@@ -27,11 +33,47 @@ services:
     ports:
       - 3306:3306
     env_file:
-      - path: .env.local
+      - .env
     networks:
-      - my_network
+      - frspc_network
 
 
+#####################################################################
+# mosquitto
+#####################################################################
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:2.0.18
+    ports:
+      - "1883:1883" # Default MQTT port
+      - "9001:9001" # Default MQTT port for WebSockets
+    volumes:
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+      - ./mosquitto/config:/mosquitto/config
+    restart: unless-stopped
+    networks:
+      - frspc_network
+
+
+#####################################################################
+# tusd
+#####################################################################
+  tusd:
+    container_name: tusd
+    image: tusproject/tusd:latest
+    restart: always
+    ports:
+      - 1080:1080
+    volumes:
+      - ./tusd:/data
+    networks:
+      - frspc_network
+
+
+#####################################################################
+# Next.js
+#####################################################################
   next-app:
     container_name: next-app
     build:
@@ -45,7 +87,7 @@ services:
 
 
     env_file:
-      - .env.local
+      - .env
     volumes:
       - ./next-app/src:/app/src
       - ./next-app/public:/app/public
@@ -53,12 +95,12 @@ services:
     ports:
       - 3000:3000
     networks:
-      - my_network
+      - frspc_network
 
-  # Add more containers below (nginx, postgres, etc.)
 
-# Define a network, which allows containers to communicate
-# with each other, by using their container name as a hostname
+#####################################################################
+# Network
+#####################################################################
 networks:
-  my_network:
+  frspc_network:
     external: true
