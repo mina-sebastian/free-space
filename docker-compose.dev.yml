@@ -39,32 +39,15 @@ services:
 
 
 #####################################################################
-# mosquitto
-#####################################################################
-  mosquitto:
-    container_name: mosquitto
-    image: eclipse-mosquitto:2.0.18
-    ports:
-      - "1883:1883" # Default MQTT port
-      - "9001:9001" # Default MQTT port for WebSockets
-    volumes:
-      - ./mosquitto/data:/mosquitto/data
-      - ./mosquitto/log:/mosquitto/log
-      - ./mosquitto/config:/mosquitto/config
-    restart: unless-stopped
-    networks:
-      - frspc_network
-
-
-#####################################################################
 # tusd
 #####################################################################
   tusd:
     container_name: tusd
     image: tusproject/tusd:latest
+    command: -behind-proxy -disable-download -hooks-http http://localhost/api/cloud/hooks
     restart: always
     ports:
-      - 1080:1080
+      - 8080:8080
     volumes:
       - ./tusd/data:/srv/tusd-data/data
     networks:
