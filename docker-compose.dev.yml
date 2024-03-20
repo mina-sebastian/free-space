@@ -52,6 +52,24 @@ services:
       - ./tusd/data:/srv/tusd-data/data
     networks:
       - frspc_network
+#####################################################################
+# ollama
+#####################################################################
+  ollama:
+    volumes:
+      - ./ollama/ollama:/root/.ollama
+    container_name: ollama
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    image: ollama/ollama:latest
+    ports:
+      - 11434:11434
+    networks:
+      - frspc_network
+
+
+
 
 
 #####################################################################
@@ -77,6 +95,10 @@ services:
     restart: always
     ports:
       - 3000:3000
+    depends_on:
+      - mysql
+      - tusd
+      - nginx
     networks:
       - frspc_network
 
