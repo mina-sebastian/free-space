@@ -8,4 +8,5 @@ This project uses Docker to create a container that runs the following images: N
 
 1. Clone the repository
 2. Run `docker compose -f docker-compose.dev.yml up` to start the development environment
+3. sudo docker cp next-app:/app/node_modules ./next-app/node_modules
 3. Open your browser and go to `http://localhost` to see the Next.js app

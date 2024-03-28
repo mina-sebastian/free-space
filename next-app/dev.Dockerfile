@@ -14,6 +14,7 @@ RUN \
 
 COPY src ./src
 COPY public ./public
+COPY prisma ./prisma
 COPY next.config.js .
 COPY tsconfig.json .
 
@@ -30,3 +31,7 @@ CMD \
   elif [ -f pnpm-lock.yaml ]; then pnpm dev; \
   else npm run dev; \
   fi
+
+  RUN yarn install
+
+  RUN npx prisma generate
