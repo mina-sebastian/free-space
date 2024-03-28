@@ -25,6 +25,7 @@ def process_streaming_response(response):
         for line in response.iter_lines():
             if line:  # filter out keep-alive new lines
                 json_object = json.loads(line.decode('utf-8'))
+                # print(json_object)
                 final_response += json_object["response"]
                 if json_object.get("done"):
                     print("Final response:", final_response)
@@ -34,8 +35,9 @@ def process_streaming_response(response):
 
 # Main execution starts here
 if __name__ == "__main__":
-    encoded_image = encode_image_to_base64("test_images/test1.jpg")
+    # encoded_image = encode_image_to_base64("test_images/test1.jpg")
     # encoded_image = encode_image_to_base64("test_images/test2.jpeg")
+    encoded_image = encode_image_to_base64("test_images/test3.jpeg")
     
     # API endpoints and headers
     url = 'http://localhost:11434/api/generate'
@@ -45,7 +47,7 @@ if __name__ == "__main__":
     # Request data
     data = {
         "model": "llava",
-        "prompt": "Describe this image with 10 most describing words separated by ','. Maximum 10 words. Nothing more. No connection words. It is very important that it is maximum 10 words. Do not include numbers.",
+        "prompt": "You are an obedient LLM that extracts tags from images. Enumerate the words that describe this image separated by ','. Do not use connection words. Do not include numbers or rank. The tags should be 1 word long.",
         "images": [encoded_image]
     }
     

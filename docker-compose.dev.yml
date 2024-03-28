@@ -90,13 +90,14 @@ services:
     volumes:
       - ./next-app/src:/app/src
       - ./next-app/public:/app/public
+      - ./next-app/prisma:/app/prisma
     restart: always
     ports:
       - 3000:3000
+      - 5555:5555
     depends_on:
       - mysql
       - tusd
-      - nginx
     networks:
       - frspc_network
 

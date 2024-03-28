@@ -18,6 +18,7 @@ RUN \
 
 COPY src ./src
 COPY public ./public
+COPY prisma ./prisma
 COPY next.config.js .
 COPY tsconfig.json .
 
