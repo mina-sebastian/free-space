@@ -55,16 +55,16 @@ services:
 #####################################################################
 # ollama
 #####################################################################
-  # ollama:
-  #   volumes:
-  #     - ./ollama/ollama:/root/.ollama
-  #   container_name: ollama
-  #   restart: unless-stopped
-  #   image: ollama/ollama:latest
-  #   ports:
-  #     - 11434:11434
-  #   networks:
-  #     - frspc_network
+  ollama:
+    volumes:
+      - ./ollama/ollama:/root/.ollama
+    container_name: ollama
+    restart: unless-stopped
+    image: ollama/ollama:latest
+    ports:
+      - 11434:11434
+    networks:
+      - frspc_network
 
 
 
