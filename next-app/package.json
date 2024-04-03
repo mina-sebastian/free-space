@@ -13,6 +13,7 @@
     "@prisma/client": "^5.10.2",
     "@uppy/core": "^3.9.3",
     "@uppy/dashboard": "^3.7.5",
+    "axios": "^1.6.8",
     "next": "latest",
     "next-auth": "^4.24.6",
     "prisma": "^5.10.2",
