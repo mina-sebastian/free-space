@@ -12,7 +12,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
 ) {
-    
+    // Create a new user with a new post
     let user = await prisma.user.create({
         data: {
             name: 'Alice',
