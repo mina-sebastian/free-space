@@ -85,7 +85,6 @@ services:
       NEXT_PUBLIC_ENV_VARIABLE: ${NEXT_PUBLIC_ENV_VARIABLE}
       DATABASE_URL: ${DATABASE_URL}
 
-
     env_file:
       - .env
     volumes:
