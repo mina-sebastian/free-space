@@ -15,12 +15,10 @@ export default async function handler(
     // Create a new user with a new post
     let user = await prisma.user.create({
         data: {
-            name: 'Alice',
-            email: 'alice@s.unibuc.ro',
-            posts: {
-                create: { title: 'Hello World' },
-            },
+          name: 'Alice',
+          email: '',
         },
-    })
+    }
+    )
     res.status(200).json({ message: user.toString()})
 }
