@@ -1,11 +1,20 @@
 import type { AppProps } from "next/app";
 
 import { ThemeProvider, createTheme, responsiveFontSizes } from '@mui/material/styles';
-import { green, purple } from '@mui/material/colors';
 import { CssBaseline } from "@mui/material";
 
+import { Ubuntu } from "next/font/google"
+
+const font = Ubuntu({
+  weight: '500',
+  subsets: ['latin'],
+})
+
 const theme = responsiveFontSizes(createTheme({
-  
+  spacing: 5,
+  typography: {
+    fontFamily: font.style.fontFamily,
+  },
   palette: {
     mode: 'dark',
     background: {
