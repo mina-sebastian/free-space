@@ -15,7 +15,6 @@ This project uses Docker to create a container that runs the following images: N
 7. Open your browser and go to `http://localhost` to see the Next.js app
 
 ## Prisma edit
-
 After making changes to the Prisma schema:
     - Update container `docker compose -f docker-compose.dev.yml up --build next-app`
     - Go to docker containers, right click on free-space-next-app and click "Attach Shell"
