@@ -42,3 +42,5 @@ pwfile
 /ollama/ollama/models/*
 /ollama/ollama/id_*
 /ollama/id_*
+
+.env
