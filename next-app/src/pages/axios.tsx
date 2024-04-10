@@ -1,12 +1,10 @@
-import Head from "next/head";
-import Image from "next/image";
 import MyAppbar from "../../components/MyAppbar";
 import { Container, Grid, useTheme } from "@mui/material";
 import { useState } from "react";
 
 import axios from "axios";
 
-export default function Home() {
+export default function Axios() {
     const theme = useTheme();
 
 

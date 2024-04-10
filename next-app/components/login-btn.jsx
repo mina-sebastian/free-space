@@ -6,10 +6,13 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import LoginIcon from '@mui/icons-material/Login';
 
+import { Grid, useTheme } from "@mui/material";
+
 export default function LoginButton() {
   const { data: session } = useSession();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const theme = useTheme();
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -18,8 +21,6 @@ export default function LoginButton() {
   const handleClose = () => {
     setAnchorEl(null);
   };
-
-  console.log(session)
 
   if (session) {
     return (
@@ -47,7 +48,7 @@ export default function LoginButton() {
 
   return (
     <>
-      <Button variant="contained" size="medium" endIcon={<LoginIcon />} onClick={() => signIn()}>
+      <Button variant="contained" size="medium" sx={{color: theme.palette.background.default, backgroundColor: "white"}} endIcon={<LoginIcon />} onClick={() => signIn()}>
           Sign in
       </Button>
     </>
