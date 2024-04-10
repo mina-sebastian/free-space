@@ -18,7 +18,7 @@ export default function DefaultBg({ children }) {
           paddingTop: 12,
           minHeight: '100vh'
       }}>
-        <Grid width="100%" maxWidth="1500px" alignItems="center">
+        <Grid width="100%" maxWidth="1500px" alignItems="center" sx={{pl:10, pr:10}}>
             {children}
         </Grid>
       </Grid>

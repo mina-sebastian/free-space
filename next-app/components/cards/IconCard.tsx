@@ -6,7 +6,7 @@ export default function IconCard({title, icon, children}) {
   const theme = useTheme();
   
   return (
-    <Paper sx={{m:2, p: 2}}>
+    <Paper>
         <Avatar
             sx={{
                 width: 80,
