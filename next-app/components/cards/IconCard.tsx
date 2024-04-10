@@ -5,7 +5,7 @@ import * as React from 'react';
 import DashboardIcon from '@mui/icons-material/Dashboard';  
 
 
-export default function DefaultBg({title, children}) {
+export default function DefaultBg({title, icon, children}) {
   const theme = useTheme();
   
   return (
@@ -19,7 +19,7 @@ export default function DefaultBg({title, children}) {
                 marginLeft:'auto'
             }}
         >
-            <DashboardIcon sx={{ width: 56, height: 56, color: theme.palette.primary.contrastText }}/>
+            {icon}
         </Avatar>
         <Typography variant='h3' align="center">
             {title}

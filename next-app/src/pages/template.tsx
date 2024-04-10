@@ -14,13 +14,14 @@ export default function Home() {
   return (
     <DefaultBg>
       <IconCard
-        title={"Welcome to free-space"}
-        icon={<CloudIcon sx={{ width: 56, height: 56, color: theme.palette.primary.contrastText }}/>
+        title={"Template page"}
+        icon={
+          <CloudIcon sx={{ width: 56, height: 56, color: theme.palette.primary.contrastText }}/>
         }
       >
-        {/* <Typography align="center">*/}
-        <Typography variant="h4" align="center">
-          free-space is a local cloud storage service that allows you to store your files on your server!
+        {/* <Typography align="center"> */}
+        <Typography sx={{m:3}} variant="h4" align="center">
+          This is a template page. You can use this as a starting point for your next features.
         </Typography>
         
       </IconCard>
