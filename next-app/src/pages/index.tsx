@@ -18,14 +18,7 @@ export default function Home() {
         icon={<CloudIcon sx={{ width: 56, height: 56, color: theme.palette.primary.contrastText }}/>
         }
       >
-      <IconCard
-        title={"Welcome to free-space"}
-        icon={<CloudIcon sx={{ width: 56, height: 56, color: theme.palette.primary.contrastText }}/>
-        }
-      >
         {/* <Typography align="center">*/}
-        <Typography variant="h4" align="center">
-          free-space is a local cloud storage service that allows you to store your files on your server!
         <Typography variant="h4" align="center">
           free-space is a local cloud storage service that allows you to store your files on your server!
         </Typography>
