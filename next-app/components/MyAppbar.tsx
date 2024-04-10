@@ -13,6 +13,7 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 // import AdbIcon from '@mui/icons-material/Adb';
 import CloudIcon from '@mui/icons-material/Cloud';
+import LoginButton from './login-btn';
 const pages = ['Products', 'Pricing', 'Blog'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
@@ -124,11 +125,10 @@ function MyAppbar() {
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-              </IconButton>
-            </Tooltip>
+          <Tooltip title="Open settings">
+            <LoginButton></LoginButton>
+          </Tooltip>
+
             <Menu
               sx={{ mt: '45px' }}
               id="menu-appbar"

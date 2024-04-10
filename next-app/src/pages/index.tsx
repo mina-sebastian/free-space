@@ -5,29 +5,22 @@ import { Avatar, Container, Divider, Grid, Paper, Typography, useTheme } from "@
 import * as React from 'react';
 import DefaultBg from "../../components/DefaultBg";
 import CloudIcon from '@mui/icons-material/Cloud';
-import IconCard from "../../components/cards/IconCard";
-import LoginButton from "../../components/login-btn";
+import ImageCard from "../../components/cards/ImageCard";
 
 export default function Home() {
   const theme = useTheme();
   
   return (
     <DefaultBg>
-      <IconCard
+      <ImageCard
         title={"Welcome to free-space"}
-        icon={<CloudIcon sx={{ width: 56, height: 56, color: theme.palette.primary.contrastText }}/>
-        }
+        imagePath={"Free-Space_logo.png"}
       >
         {/* <Typography align="center">*/}
         <Typography variant="h4" align="center">
           free-space is a local cloud storage service that allows you to store your files on your server!
         </Typography>
-
-        <LoginButton>
-
-        </LoginButton>
-
-        </IconCard>
+      </ImageCard>
     </DefaultBg>
   );
 }

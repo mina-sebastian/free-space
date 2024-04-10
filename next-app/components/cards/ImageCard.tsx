@@ -2,21 +2,24 @@
 import { Avatar, Container, Divider, Grid, Paper, Typography, useTheme } from "@mui/material";
 import * as React from 'react';
 
-export default function IconCard({title, icon, children}) {
+export default function ImageCard({title, imagePath, children}) {
   const theme = useTheme();
   
   return (
     <Paper sx={{m:2, p: 2}}>
         <Avatar
             sx={{
-                width: 80,
-                height: 80,
-                backgroundColor: theme.palette.primary.main,
+                width: 150,
+                height: 150,
+                backgroundColor: 'transparent',
                 marginRight:'auto',
-                marginLeft:'auto'
+                marginLeft:'auto',
+                marginBottom: -5,
+                marginTop: -5
             }}
+
+            src = {imagePath}
         >
-            {icon}
         </Avatar>
         <Typography variant='h3' align="center">
             {title}
