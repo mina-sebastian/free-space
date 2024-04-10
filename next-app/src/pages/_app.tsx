@@ -40,11 +40,15 @@ const theme = responsiveFontSizes(createTheme({
 }));
 
 
-export default function MyApp({ Component, pageProps }: AppProps) {
+import { SessionProvider } from "next-auth/react"
+
+export default function MyApp({ Component, session, pageProps }: AppProps) {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline enableColorScheme />
-      <Component {...pageProps} />
-    </ThemeProvider>
+    <SessionProvider session={session}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline enableColorScheme />
+        <Component {...pageProps} />
+      </ThemeProvider>
+    </SessionProvider>
   );
 }
