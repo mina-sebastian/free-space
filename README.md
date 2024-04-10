@@ -30,3 +30,7 @@ After making changes to the Prisma schema:
 1. Make sure that you are in root(free-space) directory
 2. Run `docker compose -f docker-compose.dev.yml up`
 
+# In case of major changes
+1. Make sure that you are in root(free-space) directory
+2. Run `docker compose -f docker-compose.dev.yml up --build`
+
