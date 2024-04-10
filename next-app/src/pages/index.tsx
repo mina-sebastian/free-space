@@ -5,7 +5,6 @@ import { Avatar, Container, Divider, Grid, Paper, Typography, useTheme } from "@
 import * as React from 'react';
 import DefaultBg from "../../components/DefaultBg";
 import CloudIcon from '@mui/icons-material/Cloud';
-import CloudIcon from '@mui/icons-material/Cloud';
 import IconCard from "../../components/cards/IconCard";
 import LoginButton from "../../components/login-btn";
 
