@@ -10,6 +10,7 @@ type ResponseData = {
 
 // EXAMPLE: http://localhost/api/test/addUsers
 // This will try to add a user to the database
+// This is called endpoint
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>

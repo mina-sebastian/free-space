@@ -12,6 +12,7 @@ type ResponseData = {
 // EXAMPLE: http://localhost/api/test/getUsers
 // This will return a list of users from the database
 // if there are no users in the database it will return an empty string
+// This is called endpoint
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
