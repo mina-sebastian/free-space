@@ -6,7 +6,7 @@ export default function ImageCard({title, imagePath, children}) {
   const theme = useTheme();
   
   return (
-    <Paper>
+    <Paper sx={{p: 5}}>
         <Avatar
             sx={{
                 width: 150,

@@ -1,16 +1,11 @@
-import MyAppbar from "../../components/MyAppbar";
+import MyAppbar from "../../../components/MyAppbar";
 import { Button, CircularProgress, Container, Grid, Stack, TextField, Typography, useTheme } from "@mui/material";
 import { useState, useEffect } from "react";
 
 import axios from "axios";
 import { useSession } from "next-auth/react";
-import AddUser from "../../components/pages/test/AddUser";
-import ShowUsers from "../../components/pages/test/ShowUsers";
 
-// TEST PAGE
-// THIS IS HOW EVERY PAGE SHOULD BE DONE
-
-export default function TestPage() {
+export default function ShowUsers() {
     const { data: session } = useSession();
 
     const theme = useTheme();
@@ -24,12 +19,6 @@ export default function TestPage() {
 
     // this is a special hook that will store the error state of the request
     const [error, setError] = useState(null);
-
-    // these hooks that store the fields
-    // for every field we need a hook
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [image, setImage] = useState('');
 
     // Usually we call the functions that do the GET requests "fetch"
     const fetchUsers = async () => {
@@ -51,38 +40,25 @@ export default function TestPage() {
 
     // Usually we call the functions that do the POST requests "add" or "save"
     // this is a simple test function that sends the args to the '/api/addUser' endpoint
-    const addUser = async () => {
-      // enable loading state
-      setLoading(true);
-      try {
-        // send data to the endpoint
-        const response = await axios.post('/api/test/addUser', {
-          name,
-          email,
-          image,
-        });
-    
-        // set the data to the response data
-        setData(response.data);
-      } catch (error) {
-        // this will set the error state to the error
-        console.error(error);
-        setError(error.response.data);
-      }
-      // set the loading state to false
-      setLoading(false);
-    }
-
     useEffect(() => {
         fetchUsers();
     }, []);
-    
-  
-  return (
-    <Grid sx={{backgroundColor: theme.palette.background.default}}>
-      <MyAppbar/>
-        <AddUser/>
-        <ShowUsers/>
-    </Grid>
-  );
+
+    // if the user is not authenticated
+    if(loading){
+    return (
+        <Container sx={{m:10}}>
+        <CircularProgress />
+        </Container>
+    )
+    }
+    return (
+
+        <Container sx={{m:10}}>
+            {data.message && <Typography color={"aqua"} variant="h4">Message from the server: {data.message}</Typography>}
+            {error && <Typography color={"red"} variant="h4">Error from the server: {error.message}</Typography>}
+        </Container>
+
+    )
+
 }
