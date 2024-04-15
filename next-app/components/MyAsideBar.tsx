@@ -1,17 +1,20 @@
-import { Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider } from "@mui/material";
-import AddIcon from '@mui/icons-material/Add';
+import * as React from 'react';
+import AsideNewButton from './AsideNewButton'; 
+import { Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import HomeIcon from '@mui/icons-material/Home';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudIcon from '@mui/icons-material/Cloud';
-    
+
     
 export default function MyAsideBar(){
 
   return(
     <Box sx={{ overflow: 'auto' }}>
       <List sx={{marginTop:8}}>
+        <ListItem disablePadding>
+          <AsideNewButton/> 
+        </ListItem>
         {[
-          { text: 'New', icon: <AddIcon /> },
           { text: 'Home', icon: <HomeIcon /> },
           { text: 'Bin', icon: <DeleteIcon /> },
           { text: 'Storage', icon: <CloudIcon /> }
