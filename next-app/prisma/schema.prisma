@@ -61,6 +61,7 @@ model Folder {
 
 model File {
   fileId      Int      @id
+  path        String
   denumire    String
   dimensiune  Float
   user        User     @relation(fields: [userId], references: [id])

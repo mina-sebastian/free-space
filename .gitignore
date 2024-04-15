@@ -44,3 +44,4 @@ pwfile
 /ollama/id_*
 
 .env
+ollama/ollama/history
