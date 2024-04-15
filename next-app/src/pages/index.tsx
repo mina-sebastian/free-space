@@ -5,18 +5,21 @@ import ImageCard from "../../components/cards/ImageCard";
 import axios from 'axios';
 import WelcomeBg from "../../components/WelcomeBg";
 import SearchBar from "../../components/SearchBar";
+import { useSession} from "next-auth/react"
 
 export default function Home() {
 
+  const { data: session } = useSession();
   
   return (
     <DefaultBg>
       <WelcomeBg>
-        {/* <Typography align="center">*/}
-        <Typography variant="h4" align="center">
-          free-space is a local cloud storage service that allows you to store your files on your server!
-        </Typography>
-        <SearchBar/>
+        {session ? (
+          <SearchBar/>):
+          <Typography variant="h4" align="center">
+            free-space is a local cloud storage service that allows you to store your files on your server!
+          </Typography>
+        }        
       </WelcomeBg>
     </DefaultBg>
   );
