@@ -77,8 +77,8 @@ model Link {
   path         String   @id
   expires      DateTime?
   permission   String
-  file         File     @relation(fields: [fileId], references: [fileId])
-  fileId       Int
-  folder       Folder   @relation(fields: [folderId], references: [folderId])
-  folderId     Int
+  file         File?     @relation(fields: [fileId], references: [fileId])
+  fileId       Int?
+  folder       Folder?   @relation(fields: [folderId], references: [folderId])
+  folderId     Int?
 }
