@@ -63,6 +63,7 @@ model File {
   fileId      Int      @id
   path        String
   denumire    String
+  deleted     Boolean
   dimensiune  Float
   user        User     @relation(fields: [userId], references: [id])
   userId      String
