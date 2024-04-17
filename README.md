@@ -30,10 +30,10 @@ After making changes to the Prisma schema:
 ## Test page
 To test the file upload functionality go to `http://localhost/test`
 
-# Run the project
+## Run the project
 1. Make sure that you are in root(free-space) directory
 2. Run `docker compose -f docker-compose.dev.yml up`
 
-# In case of major changes
+## In case of major changes
 1. Make sure that you are in root(free-space) directory
 2. Run `docker compose -f docker-compose.dev.yml up --build`

@@ -26,7 +26,7 @@ export default function LoginButton() {
     return (
       <>
         <Avatar 
-          alt="User Photo" 
+          alt={session.user.name}
           src={session.user.image}
           onClick={handleClick}
           sx={{ cursor: 'pointer' }}
@@ -41,6 +41,7 @@ export default function LoginButton() {
           }}
         >
           <MenuItem onClick={() => {signOut(); handleClose(); }}>Sign out</MenuItem>
+          <MenuItem onClick={() => {editUsers(); handleClose(); }}>Edit users</MenuItem>
         </Menu>
       </>
     )
