@@ -41,6 +41,7 @@ export default function LoginButton() {
           }}
         >
           <MenuItem onClick={() => {signOut(); handleClose(); }}>Sign out</MenuItem>
+          <MenuItem onClick={() => {editUsers(); handleClose(); }}>Edit users</MenuItem>
         </Menu>
       </>
     )
