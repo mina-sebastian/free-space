@@ -26,7 +26,7 @@ export default function LoginButton() {
     return (
       <>
         <Avatar 
-          alt="User Photo" 
+          alt={session.user.name}
           src={session.user.image}
           onClick={handleClick}
           sx={{ cursor: 'pointer' }}
