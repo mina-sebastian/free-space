@@ -6,6 +6,8 @@ import DefaultBg from "../../components/DefaultBg";
 import IconCard from "../../components/cards/IconCard";
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 // Styled Paper component for each user
 const Item = styled(({ children, ...otherProps }: { children: React.ReactNode }) => (
@@ -102,6 +104,31 @@ export default function AdminPage() {
                 showModal("Failed to make user admin.");
             });
     };
+
+
+    const { data: session, status } = useSession();
+    const router = useRouter();
+
+    useEffect(() => {
+        // Check if the user is not logged in, does not exist in session, or is not an admin
+        if(status === "loading") return; // Do nothing while loading
+        if (!session || !session.user || !session.user.admin) {
+            router.replace('/'); // Redirect to homepage
+        }
+    }, [session, router, status]); // Depend on session, router and status
+
+    // Optional: Render a loading state while checking session
+    if (status === "loading") {
+        return (
+            <DefaultBg>
+                <IconCard title={"Loading..."} icon={<AdminPanelSettingsIcon sx={{ width: 56, height: 56, color: "grey" }} />}>
+                    <Container sx={{ mt: 5 }}>
+                        <Typography variant="h6" align="center">Checking permissions...</Typography>
+                    </Container>
+                </IconCard>
+            </DefaultBg>
+        );
+    }
 
     return (
         <DefaultBg>

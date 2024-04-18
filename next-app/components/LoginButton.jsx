@@ -42,7 +42,7 @@ export default function LoginButton() {
           }}
         >
           <MenuItem onClick={() => {signOut(); handleClose(); }}>Sign out</MenuItem>
-          <MenuItem component={Link} href="/admin">Edit Users</MenuItem>
+          {session.user.admin && <MenuItem component={Link} href="/admin">Edit Users</MenuItem>}
         </Menu>
       </>
     )
