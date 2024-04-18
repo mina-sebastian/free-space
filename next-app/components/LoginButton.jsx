@@ -7,6 +7,7 @@ import MenuItem from '@mui/material/MenuItem';
 import LoginIcon from '@mui/icons-material/Login';
 
 import { Grid, useTheme } from "@mui/material";
+import Link from 'next/link';
 
 export default function LoginButton() {
   const { data: session } = useSession();
@@ -41,7 +42,7 @@ export default function LoginButton() {
           }}
         >
           <MenuItem onClick={() => {signOut(); handleClose(); }}>Sign out</MenuItem>
-          <MenuItem onClick={() => {editUsers(); handleClose(); }}>Edit users</MenuItem>
+          <MenuItem component={Link} href="/admin">Edit Users</MenuItem>
         </Menu>
       </>
     )
