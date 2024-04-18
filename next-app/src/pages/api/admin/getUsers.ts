@@ -20,7 +20,7 @@ export default async function handler(
 ) {
     // Ensure the user is authenticated
     const session = await getServerSession(req, res, authOptions);
-    if (!session) {
+    if (!session || !session.user.admin) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
