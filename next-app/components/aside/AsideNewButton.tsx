@@ -53,7 +53,7 @@ export default function AsideNewButton() {
           <MenuItem onClick={handleClose}>New Folder</MenuItem>
           <Divider/>
           <UploadFileButton onClose={handleClose} />
-          <UploadFolderButton onClose={handleClose}/>
+          {/* <UploadFolderButton onClose={handleClose}/> */}
         </Box>
       </Menu>
     </>

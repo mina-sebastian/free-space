@@ -1,5 +1,5 @@
 import * as React from 'react';
-import ImageCard from "./cards/ImageCard";
+import ImageCard from "../cards/ImageCard";
 
 export default function WelcomeBg({children}) {
 

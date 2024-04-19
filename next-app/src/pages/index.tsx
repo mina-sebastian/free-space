@@ -3,8 +3,8 @@ import * as React from 'react';
 import DefaultBg from "../../components/DefaultBg";
 import ImageCard from "../../components/cards/ImageCard";
 import axios from 'axios';
-import WelcomeBg from "../../components/WelcomeBg";
-import SearchBar from "../../components/SearchBar";
+import WelcomeBg from "../../components/main/WelcomeBg";
+import SearchBar from "../../components/main/SearchBar";
 import { useSession} from "next-auth/react"
 
 export default function Home() {
