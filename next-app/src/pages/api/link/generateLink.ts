@@ -35,7 +35,7 @@ export default async function generateLink(
   try {
     if (type === 'file') {
       const file = await prisma.file.findUnique({
-        where: { fileId: id, userId: session.user.id }
+        where: { fileId: id, user:{email: session.user.email} }
       });
 
       if (!file) {
@@ -47,7 +47,7 @@ export default async function generateLink(
       });
     } else if (type === 'folder') {
       const folder = await prisma.folder.findUnique({
-        where: { folderId: id, userId: session.user.id }
+        where: { folderId: id, user:{email: session.user.email} }
       });
 
       if (!folder) {
