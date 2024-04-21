@@ -14,7 +14,6 @@ export default function WelcomeBg({children}) {
         {children}
     </ImageCard>
 
-    <LinkGenerationModal type={"folder"} name={"Test.js"} id={2}/>
     </>
   );
 }
