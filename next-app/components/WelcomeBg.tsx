@@ -13,7 +13,7 @@ export default function WelcomeBg({children}) {
     >
         {children}
     </ImageCard>
-
+ 
     </>
   );
 }
