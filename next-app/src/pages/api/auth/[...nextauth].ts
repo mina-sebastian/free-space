@@ -10,6 +10,7 @@ adapter: PrismaAdapter(prisma),
 callbacks: {
   async session({ session, user, token }: any) {
     session.user.admin = user.admin
+    session.user.id = user.id
     return session
   },
 },
