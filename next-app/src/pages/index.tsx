@@ -6,8 +6,9 @@ import axios from 'axios';
 import WelcomeBg from "../../components/WelcomeBg";
 import SearchBar from "../../components/SearchBar";
 import { useSession} from "next-auth/react"
+import Uppy from '@uppy/core';
 
-export default function Home() {
+export default function Home({uppy}: {uppy: Uppy}) {
 
   const { data: session } = useSession();
   
