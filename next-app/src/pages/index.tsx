@@ -16,7 +16,7 @@ export default function Home({uppy}: {uppy: Uppy}) {
   return (
     <DefaultBg>
       <WelcomeBg>
-        <UploadModal/>
+        {/* <UploadModal/> */}
         {session ? (
           <SearchBar/>):
           <Typography variant="h4" align="center">
