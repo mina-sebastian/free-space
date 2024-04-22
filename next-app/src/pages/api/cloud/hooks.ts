@@ -44,7 +44,6 @@ export default async function (
   req: NextApiRequest,
   res: NextApiResponse<HookResponse>
 ): Promise<void> {
-  console.log('Received hook request:', req.body);
   const hookResponse: HookResponse = { HTTPResponse: { Headers: {} } };
 
   try {
@@ -65,7 +64,7 @@ export default async function (
         throw new Error('Unsupported hook type');
     }
 
-    console.log('Responding with hook response:', hookResponse);
+    // console.log('Responding with hook response:', hookResponse);
     res.status(200).json(hookResponse);
   } catch (error) {
     console.error('Error processing hook:', error);
@@ -110,7 +109,7 @@ async function handlePreCreate(hookRequest: HookRequest, hookResponse: HookRespo
  */
 async function handlePostFinish(hookRequest: HookRequest) {
   const { ID, Size, MetaData } = hookRequest.Event.Upload;
-  console.log(`Upload ${ID} (${Size} bytes) is finished.`);
+  // console.log(`Upload ${ID} (${Size} bytes) is finished.`);
 
   const user = await prisma.user.findUnique({
     where: {
