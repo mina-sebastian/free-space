@@ -540,13 +540,12 @@
   dependencies:
     "@uppy/utils" "^5.7.5"
 
-"@uppy/image-editor@^2.4.4":
-  version "2.4.4"
-  resolved "https://registry.yarnpkg.com/@uppy/image-editor/-/image-editor-2.4.4.tgz#4040ab945261101345ceeaa341c461ce72da27ca"
-  integrity sha512-ASjv2Mh4mhlhkh1isDvIj3tlbERG77jo/ETwtajRSERGV6Ga9w1QGG7vL19bmNW9McHPFMZvOKNojAgv4SAtPg==
+"@uppy/file-input@^3.1.1":
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/@uppy/file-input/-/file-input-3.1.1.tgz#db0bdbf810bcf961fb41840b7af4f7f549489804"
+  integrity sha512-13XsaIKCdBzq0cIUaKfgdl0VfO0G0Iiyisl6cFkHXf+U3yPp8l+JTLdtXZNCUbb5n30y+1wAIugH5iNJ48HxRQ==
   dependencies:
-    "@uppy/utils" "^5.7.4"
-    cropperjs "1.5.7"
+    "@uppy/utils" "^5.7.5"
     preact "^10.5.13"
 
 "@uppy/informer@^3.1.0":
@@ -575,6 +574,14 @@
     nanoid "^4.0.0"
     p-queue "^7.3.4"
     preact "^10.5.13"
+
+"@uppy/react@^3.3.0":
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/@uppy/react/-/react-3.3.0.tgz#a38e5de431af1841f0e92bf8f962d0e8fef1fdd6"
+  integrity sha512-twpYuluAQ6psnp1+Q4zq6ibv59RYxhnryMPKHIIlV68XYGv2QRRokxBTbVd9VHcmB7gybKQ1MDV3d1TD54Txrg==
+  dependencies:
+    "@uppy/utils" "^5.7.5"
+    prop-types "^15.6.1"
 
 "@uppy/status-bar@^3.3.1":
   version "3.3.1"
@@ -752,11 +759,6 @@ cosmiconfig@^7.0.0:
     parse-json "^5.0.0"
     path-type "^4.0.0"
     yaml "^1.10.0"
-
-cropperjs@1.5.7:
-  version "1.5.7"
-  resolved "https://registry.yarnpkg.com/cropperjs/-/cropperjs-1.5.7.tgz#b65019725bae1c6285e881fb661b2141fa57025b"
-  integrity sha512-sGj+G/ofKh+f6A4BtXLJwtcKJgMUsXYVUubfTo9grERiDGXncttefmue/fyQFvn8wfdyoD1KhDRYLfjkJFl0yw==
 
 csstype@^3.0.2, csstype@^3.1.3:
   version "3.1.3"
@@ -1206,7 +1208,7 @@ prisma@^5.12.1:
   dependencies:
     "@prisma/engines" "5.12.1"
 
-prop-types@^15.6.2, prop-types@^15.8.1:
+prop-types@^15.6.1, prop-types@^15.6.2, prop-types@^15.8.1:
   version "15.8.1"
   resolved "https://registry.npmjs.org/prop-types/-/prop-types-15.8.1.tgz"
   integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==

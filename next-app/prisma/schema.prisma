@@ -49,23 +49,23 @@ model Session {
 }
 
 model Folder {
-  folderId     String   @id @default(cuid())
-  name         String
-  user         User     @relation(fields: [userId], references: [id])
-  userId       String
-  outerFolder  Folder?  @relation("OuterFolder", fields: [outerFolderId], references: [folderId])
+  folderId      String   @id @default(cuid())
+  name          String
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  outerFolder   Folder?  @relation("OuterFolder", fields: [outerFolderId], references: [folderId])
   outerFolderId String?
-  innerFolders Folder[] @relation("OuterFolder")
-  files        File[]
-  links        Link[]
+  innerFolders  Folder[] @relation("OuterFolder")
+  files         File[]
+  links         Link[]
 }
 
 model File {
   fileId      String   @id @default(cuid())
   path        String
-  denumire    String
-  deleted     Boolean
-  dimensiune  Float
+  name        String
+  size        Float
+  deleted     Boolean  @default(false)
   user        User     @relation(fields: [userId], references: [id])
   userId      String
   folder      Folder   @relation(fields: [folderId], references: [folderId])
