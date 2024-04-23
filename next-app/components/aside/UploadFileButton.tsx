@@ -2,14 +2,13 @@ import * as React from 'react';
 import { MenuItem } from '@mui/material';
 import Uppy from'@uppy/core'
 import Tus from'@uppy/tus'
-import { Dashboard, DashboardModal, DragDrop, ProgressBar, FileInput } from '@uppy/react'
+import { DashboardModal } from '@uppy/react'
 
 import '@uppy/core/dist/style.css'
 import '@uppy/dashboard/dist/style.css'
 import '@uppy/drag-drop/dist/style.css'
 import '@uppy/file-input/dist/style.css'
 import '@uppy/progress-bar/dist/style.css'
-import { Button } from '@mui/material'
 import { useSession } from 'next-auth/react'
 
 interface UploadFileButtonProps {
@@ -17,33 +16,32 @@ interface UploadFileButtonProps {
 }
 
 const UploadFileButton: React.FC<UploadFileButtonProps> = ({ onClose }) => {
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const { data: session } = useSession();
 
-    const [uppy, setUppy] = React.useState<Uppy>(null);
+  const [uppy, setUppy] = React.useState<Uppy>(null);
 
-    const [open, setOpen] = React.useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
+  const [open, setOpen] = React.useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
-    React.useEffect(() => {
-      if (typeof window !== 'undefined') { // Ensures this code block runs only on the client
-        if(!!session && !!session.user){
-          const up = new Uppy({
-            meta: { tkn: session.user.id},
-          })
-              .use(Tus,
-                {
-                  endpoint: 'http://localhost/files/'
-                })
-              ;
-          setUppy(up);
-          
-          return () => up.close();
-        }
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') { // Ensures this code block runs only on the client
+      if(!!session && !!session.user){
+        const up = new Uppy({
+          meta: { tkn: session.user.id},
+        })
+            .use(Tus,
+              {
+                endpoint: 'http://localhost/files/'
+              })
+            ;
+        setUppy(up);
+        
+        return () => up.close();
       }
-      }, [session]);
+    }
+    }, [session]);
 
   return (
     <>
@@ -51,7 +49,6 @@ const UploadFileButton: React.FC<UploadFileButtonProps> = ({ onClose }) => {
       {!!uppy && <DashboardModal
         uppy={uppy}
         open={open}
-        // target={document.body}
         onRequestClose={handleClose}
     />}
     </>

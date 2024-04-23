@@ -8,8 +8,7 @@ import Drawer from '@mui/material/Drawer';
 import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { Folder } from '@mui/icons-material';
-import FolderNavButton from './FolderNavButton';
+import FolderListButtons from './FolderListButtons';
 
 const drawerWidth = 240;
 
@@ -17,12 +16,11 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
   ...theme.mixins.toolbar,
   justifyContent: 'flex-end',
 }));
     
-export default function MyAsideBar({ open, setOpen, onDataFetched }) {
+export default function MyAsideBar({ currentlyOpen, open, setOpen }) {
   const [outerFolderId, setFolderId] = useState(0); // State to store folderId
 
   const handleDrawerClose = () => {
@@ -57,11 +55,10 @@ export default function MyAsideBar({ open, setOpen, onDataFetched }) {
       <Box sx={{ overflow: 'auto' }}>
         <List sx={{ marginTop: 8, marginBottom: 8 }}>
           <ListItem disablePadding>
-            <AsideNewButton outerFolderId={outerFolderId} /> {/* Pass folderId as a prop */}
+            <AsideNewButton outerFolderId={outerFolderId} />
           </ListItem>
           <ListItem>
-            {/* Pass the onDataFetched prop to FolderNavButton */}
-            <FolderNavButton onDataFetched={onDataFetched} outerFolderId={handleFolderChange}/>
+            <FolderListButtons currentlyOpen={currentlyOpen}/>
           </ListItem>
           {[
             { text: 'Bin', icon: <DeleteIcon /> },

@@ -24,7 +24,7 @@ const LinkPage: NextPage<LinkProps> = ({ data, error }) => {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { link } = context.params!;
   try {
-    const res = await axios.get(`http://localhost:3000/api/link/${link}`);
+    const res = await axios.get(`/api/link/${link}`);
     return { props: { data: res.data.data } };
   } catch (error) {
     return { props: { error: error.response?.data?.error || "An unexpected error occurred" } };
