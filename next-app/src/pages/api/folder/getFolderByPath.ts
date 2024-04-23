@@ -11,18 +11,24 @@ type FolderType = {
 };
 
 type FileType = {
-  fileId: string;
   path: string;
-  denumire: string;
+  user: {
+      image: string;
+      name: string;
+      email: string;
+  };
+  folderId: string;
+  fileId: string;
+  name: string;
+  size: Number;
   deleted: boolean;
   dimensiune: number;
-  userId: string;
-  folderId: string;
 };
 
 type ResponseData = {
   folders: FolderType[];
   files: FileType[];
+  folderId: string;
 };
 
 //generate a recursive folder where name = path[i]
@@ -67,36 +73,45 @@ export default async function handler(
         whereQuery = generateRecursiveOuterFolder(path.reverse());
     }
     console.log("query", whereQuery);
-  const folders = await prisma.folder.findMany({
-    select: {
-        folderId: true,
-        name: true,
-        outerFolderId: true,
-    },
-    where: {
-      user: user,
-      outerFolder: whereQuery
-    },
-  });
-  const files = await prisma.file.findMany({
-    select: {
-        fileId: true,
-        path: true,
-        name: true,
-        deleted: true,
-        size: true,
-        folder: true
-    },
-    where: {
-      user: user,
-      folder: whereQuery
-    }
-  });
-  // console.log("FOLDERS:",folders);
-  // console.log("FILES:",files);
+    const folder = await prisma.folder.findFirst({
+      select: {
+          folderId: true,
+          name: true, 
+          outerFolderId: true,
+          innerFolders: {
+            select: {
+              folderId: true,
+              name: true,
+              outerFolderId: true
+            },
+          },
+          files: {
+            select: {
+              fileId: true,
+              path: true,
+              deleted: true,
+              name: true,
+              size: true,
+              user:{
+                select:{
+                  image: true,
+                  name: true,
+                  email: true,
+                }
+              },
+              folderId: true
+            }
+          }
+      },
+      where: {
+        user: user,
+        ...whereQuery
+      },
+    });
+  console.log("FILES:",folder.files);
   // Return the list of users
 
-  res.status(200).json({ folders: folders, files: files });
+  res.status(200).json({ folders: folder.innerFolders, files: folder.files, folderId: folder.folderId});
 
 
 }

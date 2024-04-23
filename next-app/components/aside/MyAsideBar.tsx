@@ -20,7 +20,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'flex-end',
 }));
     
-export default function MyAsideBar({ currentlyOpen, open, setOpen }) {
+export default function MyAsideBar({ currentlyOpen, open, setOpen, folderId }) {
   const [outerFolderId, setFolderId] = useState(0); // State to store folderId
 
   const handleDrawerClose = () => {
@@ -55,7 +55,7 @@ export default function MyAsideBar({ currentlyOpen, open, setOpen }) {
       <Box sx={{ overflow: 'auto' }}>
         <List sx={{ marginTop: 8, marginBottom: 8 }}>
           <ListItem disablePadding>
-            <AsideNewButton outerFolderId={outerFolderId} />
+            <AsideNewButton outerFolderId={folderId} />
           </ListItem>
           <ListItem>
             <FolderListButtons currentlyOpen={currentlyOpen}/>

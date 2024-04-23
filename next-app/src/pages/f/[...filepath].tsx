@@ -29,7 +29,7 @@ export default function FolderPath() {
 
   
   return (
-    <DefaultBg currentlyOpen={router.query.filepath}>
+    <DefaultBg currentlyOpen={router.query.filepath} folderId={fetchedData?.folderId} >
         <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} />
     </DefaultBg>
   );

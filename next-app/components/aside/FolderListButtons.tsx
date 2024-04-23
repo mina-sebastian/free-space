@@ -100,9 +100,6 @@ const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="" }: Fold
     const handleToggle = async () => {
         router.push(parentPath+"/"+folder.name)
         setOpen(!open);
-
-      if(subfolders.length > 0)
-        return;
       if (!open && subfolders.length === 0) {
         setLoading(true);
         try {
