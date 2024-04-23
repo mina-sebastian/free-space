@@ -26,7 +26,7 @@ export default function FileCard({ itemId, itemType, name, link=""}) {
     console.log("New", itemType, "name:", newName, "ID:", itemId);
     if (newName !== null) {
       // If user entered a new name
-      axios.put(`/api/${itemType}/${itemId}/renameFolder`, { newName }) // Make API call to rename item
+      axios.put(`/api/${itemType}/${itemId}/rename`, { newName }) // Make API call to rename item
         .then(response => {
           console.log("Item renamed successfully:", response.data);
           router.replace(router.asPath);
@@ -43,7 +43,7 @@ export default function FileCard({ itemId, itemType, name, link=""}) {
   const handleDeleteItem = () => {
     if (window.confirm(`Are you sure you want to delete ${itemType} "${name}" and all its contents?`)) {
       // Confirm deletion
-      axios.delete(`/api/${itemType}/${itemId}/deleteFolder`) // Make API call to delete item
+      axios.delete(`/api/${itemType}/${itemId}/delete`) // Make API call to delete item
         .then(response => {
           console.log("Item deleted successfully:", response.data);
           router.replace(router.asPath);
@@ -84,6 +84,7 @@ export default function FileCard({ itemId, itemType, name, link=""}) {
       >
         <MenuItem onClick={handleRenameItem}>Rename</MenuItem>
         <MenuItem onClick={handleDeleteItem}>Delete</MenuItem>
+        <MenuItem onClick={() => onShare(itemType, itemId, name)}>Share</MenuItem>
         {/* Add other menu items here */}
       </Menu>
     </Paper>

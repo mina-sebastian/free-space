@@ -25,9 +25,9 @@ export default async function handler(
           select: {
             fileId: true,
             path: true,
-            denumire: true,
+            name: true, // Presupunând că "denumire" ar trebui să fie "name"
             deleted: true,
-            dimensiune: true,
+            size: true, // "dimensiune" a fost redenumit în "size"
             folder: true,
           }
         },
@@ -44,7 +44,7 @@ export default async function handler(
       return res.status(404).json({ error: 'Link not found' });
     }
 
-    if (new Date() > linkData.expires) {
+    if (linkData.expires && new Date() > linkData.expires) {
       return res.status(403).json({ error: 'Link expired' });
     }
 

@@ -26,7 +26,7 @@ const style = {
   borderRadius: '16px'
 };
 
-export default function TransitionsModal() {
+const TransitionsModal = React.forwardRef( (props, ref) => {
   const accessOptions = ["Anyone with the link", "Only authenticated users"];
   const radioOptions = ["Read", "Write", "Read-Write"];
   const [type, setType] = React.useState("");
@@ -40,12 +40,19 @@ export default function TransitionsModal() {
   const [error, setError] = React.useState("");
   const [successMessage, setSuccessMessage] = React.useState('');
   const [copySuccess, setCopySuccess] = React.useState('');
+  const modalRef = React.useRef();
+
+  React.useImperativeHandle(ref, () => ({
+    open: (type, id, name) => {
+      handleOpen(type, id, name);
+    }
+  }));
 
 
-  const handleOpen = () => {
-    setType("folder");
-    setId("2");
-    setName("Test.js");
+  const handleOpen = (type, id, name) => {
+    setType(type);
+    setId(id);
+    setName(name);
     setOpen(true);
   }
   const handleClose = () => {
@@ -117,7 +124,7 @@ export default function TransitionsModal() {
 
   return (
     <div>
-      <Button onClick={handleOpen}>Open modal</Button>
+      {/* <Button onClick={handleOpen}>Open modal</Button> */}
       <Modal
         aria-labelledby="transition-modal-title"
         aria-describedby="transition-modal-description"
@@ -189,4 +196,6 @@ export default function TransitionsModal() {
       </Modal>
     </div>
   );
-}
+});
+
+export default TransitionsModal;

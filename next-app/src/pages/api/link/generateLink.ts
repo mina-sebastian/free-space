@@ -21,7 +21,7 @@ export default async function generateLink(
   }
 
   const {type, permissions } = req.body;
-  const id = parseInt(req.body.id);
+  const id = req.body.id;
 
   if (!id || !type) {
     return res.status(400).json({ message: "Resource ID and type are required" });
@@ -65,6 +65,8 @@ export default async function generateLink(
     return res.status(200).json({ message: "Link generated successfully", link: `${baseUrl}/${accessKey}` });
 
   } catch (error) {
+    console.log(req.body);
+    console.log(error);
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 }
