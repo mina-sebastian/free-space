@@ -5,8 +5,9 @@ import AddIcon from '@mui/icons-material/Add';
 import { Divider, ListItemButton, ListItemIcon, ListItemText, Box } from '@mui/material';
 import UploadFileButton from './UploadFileButton';
 import UploadFolderButton from './UploadFolderButton';
+import axios from 'axios'; // Import axios for making API calls
 
-export default function AsideNewButton() {
+export default function AsideNewButton({outerFolderId}) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -19,6 +20,21 @@ export default function AsideNewButton() {
     setAnchorEl(null);
   };
 
+  const handleNewFolderClick = () => {
+    const newName = prompt(`Enter new folder name:`); 
+    console.log("New folder name:", newName, "Outer folder ID:", outerFolderId);
+    // Make API call to create a new folder
+    axios.post(`/api/folder/${outerFolderId}/createFolder`, { newName })
+    .then(response => {
+      console.log('New folder created:', response.data);
+      handleClose(); // Close the menu after successful creation
+      // You can add further actions, such as updating the UI with the new folder
+    })
+    .catch(error => {
+      console.error('Error creating new folder:', error);
+      // Handle error cases if needed
+    });
+  };
 
   return (
     <>
@@ -50,10 +66,10 @@ export default function AsideNewButton() {
         }}
       >
         <Box sx={{ minWidth: 200 }}>
-          <MenuItem onClick={handleClose}>New Folder</MenuItem>
+          <MenuItem onClick={handleNewFolderClick}>New Folder</MenuItem> {/* Call handleNewFolderClick on click */}
           <Divider/>
           <UploadFileButton onClose={handleClose} />
-          <UploadFolderButton onClose={handleClose}/>
+          {/* <UploadFolderButton onClose={handleClose}/> */}
         </Box>
       </Menu>
     </>
