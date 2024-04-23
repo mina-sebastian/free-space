@@ -9,21 +9,29 @@ import { useSession} from "next-auth/react"
 import Uppy from '@uppy/core';
 import UploadModal from "../../components/UploadModal";
 import { useRouter } from 'next/router'
+import FileMenu from "../../components/main/FileMenu";
 
 export default function FolderPath() {
 
   const { data: session } = useSession();
   const router = useRouter()
+  const [fetchedData, setFetchedData] = React.useState<any>(null); // State to store fetched data
 
   console.log(router.query.filepath)
+
+  const handleDataFetched = (data: any) => {
+    // Set the fetched data to the state
+    setFetchedData(data);
+  };
   
   return (
-    <DefaultBg>
+    <DefaultBg onDataFetched={handleDataFetched}>
       <WelcomeBg>
         <Typography variant="h4" align="center">
         Do what you know here
         </Typography>
       </WelcomeBg>
+      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} />
     </DefaultBg>
   );
 }
