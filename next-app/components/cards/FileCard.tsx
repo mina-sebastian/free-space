@@ -4,10 +4,13 @@ import { Avatar, Typography, Paper, Divider, IconButton, useTheme, Menu, MenuIte
 import React, { useState } from 'react';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import axios from 'axios'; // Import axios for making API calls
+import { useRouter } from "next/router";
 
 export default function FileCard({ itemId, itemType, name, children }) {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
+
+  const router = useRouter();
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -25,6 +28,7 @@ export default function FileCard({ itemId, itemType, name, children }) {
       axios.put(`/api/${itemType}/${itemId}/rename`, { newName }) // Make API call to rename item
         .then(response => {
           console.log("Item renamed successfully:", response.data);
+          router.replace(router.asPath);
           // Optionally, you can update the UI to reflect the new name
         })
         .catch(error => {
@@ -41,6 +45,7 @@ export default function FileCard({ itemId, itemType, name, children }) {
       axios.delete(`/api/${itemType}/${itemId}/delete`) // Make API call to delete item
         .then(response => {
           console.log("Item deleted successfully:", response.data);
+          router.replace(router.asPath);
           // Optionally, you can update the UI to reflect the deletion
         })
         .catch(error => {
