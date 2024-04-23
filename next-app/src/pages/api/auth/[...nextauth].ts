@@ -7,6 +7,15 @@ export const authOptions = {
 
 adapter: PrismaAdapter(prisma),
 
+
+callbacks: {
+  async session({ session, user, token }: any) {
+    session.user.admin = user.admin
+    session.user.id = user.id
+    return session
+  },
+},
+
 providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
