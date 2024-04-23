@@ -10,6 +10,7 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import LoginButton from './LoginButton';
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import { styled, useTheme } from '@mui/material/styles';
+import { useSession } from 'next-auth/react';
 
 const drawerWidth = 240;
 
@@ -38,6 +39,7 @@ const AppBar = styled(MuiAppBar, {
 function MyAppbar({ open, setOpen }) {
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
+  const { data: session } = useSession();
 
   const handleCloseNavMenu = () => {
     setAnchorElNav(null);
@@ -50,6 +52,7 @@ function MyAppbar({ open, setOpen }) {
   return (
     <AppBar position="fixed" open={open}>
       <Toolbar disableGutters>
+        {session ? (
         <IconButton
           color="inherit"
           aria-label="open drawer"
@@ -59,6 +62,7 @@ function MyAppbar({ open, setOpen }) {
         >
           <MenuIcon />
         </IconButton>
+        ): null}
         <CloudIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, ml:8 }} />
         <Typography
           variant="h6"

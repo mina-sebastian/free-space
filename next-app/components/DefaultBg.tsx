@@ -57,6 +57,7 @@ export default function DefaultBg({children}) {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <MyAppbar open={open} setOpen={setOpen} />
+
       <MyAsideBar open={open} setOpen={setOpen} onDataFetched={handleDataFetched} />
         
       <Main open={open}>

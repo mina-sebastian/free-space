@@ -5,7 +5,7 @@ import { authOptions } from '../../auth/[...nextauth]';
 
 type FileType = {
   fileId: string;
-  denumire: string;
+  name: string;
   folderId: string;
 };
 

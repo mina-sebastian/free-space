@@ -23,7 +23,6 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 }));
     
 export default function MyAsideBar({ open, setOpen, onDataFetched }) {
-  const [breadcrumbPath, setBreadcrumbPath] = useState('');
   const [outerFolderId, setFolderId] = useState(0); // State to store folderId
 
   const handleDrawerClose = () => {
@@ -62,7 +61,7 @@ export default function MyAsideBar({ open, setOpen, onDataFetched }) {
           </ListItem>
           <ListItem>
             {/* Pass the onDataFetched prop to FolderNavButton */}
-            <FolderNavButton onDataFetched={onDataFetched} outerFolderId={handleFolderChange} breadcrumbPath={breadcrumbPath}/>
+            <FolderNavButton onDataFetched={onDataFetched} outerFolderId={handleFolderChange}/>
           </ListItem>
           {[
             { text: 'Bin', icon: <DeleteIcon /> },

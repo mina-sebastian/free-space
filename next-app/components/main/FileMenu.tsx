@@ -22,7 +22,7 @@ function FileMenu({ folders, files }) {
         {files.map(file => (
           <ListItem key={file.fileId}>
             {/* Pass the onDelete function to the FileCard component */}
-            <FileCard itemId={file.fileId} itemType="file" name={file.denumire} />
+            <FileCard itemId={file.fileId} itemType="file" name={file.name} />
           </ListItem>
         ))}
       </List>
