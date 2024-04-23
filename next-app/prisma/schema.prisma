@@ -70,7 +70,6 @@ model File {
   userId      String
   folder      Folder   @relation(fields: [folderId], references: [folderId])
   folderId    String
-  folderId    String
   links       Link[]
 }
 
@@ -80,8 +79,6 @@ model Link {
   permission   String
   file         File?     @relation(fields: [fileId], references: [fileId])
   fileId       String?
-  fileId       String?
   folder       Folder?   @relation(fields: [folderId], references: [folderId])
-  folderId     String?
   folderId     String?
 }
