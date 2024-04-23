@@ -61,7 +61,9 @@ export default async function (
         await handlePostFinish(hookRequest);
         break;
       default:
-        throw new Error('Unsupported hook type');
+        hookResponse.RejectUpload = true;
+        hookResponse.HTTPResponse.StatusCode = 200;
+        return res.status(200).json(hookResponse);
     }
 
     // console.log('Responding with hook response:', hookResponse);
