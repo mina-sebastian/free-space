@@ -22,6 +22,7 @@ type HookResponse = {
     ID: string;
     MetaData: {
       tkn: string;
+      folderId: string;
       filename: string;
       creation_time: string;
     };
@@ -95,10 +96,12 @@ async function handlePreCreate(hookRequest: HookRequest, hookResponse: HookRespo
   } else if (!isValid) {
     throw new Error('No filename provided');
   } else {
+    console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", metaData);
     hookResponse.ChangeFileInfo = {
       ID: `frspc-${createId()}`,
       MetaData: {
         tkn: metaData.tkn,
+        folderId: metaData.folderId,
         filename: metaData.filename,
         creation_time: new Date().toUTCString(),
       },
@@ -121,16 +124,15 @@ async function handlePostFinish(hookRequest: HookRequest) {
 
   const folder = await prisma.folder.findFirst({
     where: {
-      name: "home",
-      userId: user.id
+      folderId: MetaData.folderId,
     },
     select: {
       folderId: true
     }
   }) || await prisma.folder.create({
     data: {
-      name: "home",
-      userId: user.id
+      name: "Home",
+      userId: user.id,
     }
   });
 

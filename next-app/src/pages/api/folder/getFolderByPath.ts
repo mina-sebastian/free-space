@@ -60,7 +60,7 @@ export default async function handler(
   
   //path is like "/folder1/folder2/folder3"
   const { path }: {path: string|string[]} = req.body;
-  console.log("path", path);
+  // console.log("path", path);
 
   let whereQuery = {};
 

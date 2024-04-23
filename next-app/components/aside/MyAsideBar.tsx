@@ -53,7 +53,7 @@ export default function MyAsideBar({ currentlyOpen, open, setOpen, folderId }) {
       </DrawerHeader>
       <Divider />
       <Box sx={{ overflow: 'auto' }}>
-        <List sx={{ marginTop: 8, marginBottom: 8 }}>
+        <List>
           <ListItem disablePadding>
             <AsideNewButton outerFolderId={folderId} />
           </ListItem>

@@ -5,8 +5,9 @@ import React, { useState } from 'react';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import axios from 'axios'; // Import axios for making API calls
 import { useRouter } from "next/router";
+import Link from "next/link";
 
-export default function FileCard({ itemId, itemType, name, children }) {
+export default function FileCard({ itemId, itemType, name, link=""}) {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -57,8 +58,13 @@ export default function FileCard({ itemId, itemType, name, children }) {
   };
 
   return (
-    <Paper sx={{ width: '100%', height: 50, p: 1, display: 'flex', alignItems: 'center' }}>
-      <Typography variant='h6' sx={{ flexGrow: 1, ml:3 }}>
+    <Paper sx={{ width: '100%', height: 50, p: 2, display: 'flex', alignItems: 'center' }}>
+      <Typography 
+        component={Link} 
+        href={itemType === 'folder' ? `${router.asPath+"/"+name}` : link} // Set the href like this
+        variant="h6" 
+        sx={{ flexGrow: 1, ml: 3 }}
+      >
         {name}
       </Typography>
       <IconButton
@@ -80,7 +86,6 @@ export default function FileCard({ itemId, itemType, name, children }) {
         <MenuItem onClick={handleDeleteItem}>Delete</MenuItem>
         {/* Add other menu items here */}
       </Menu>
-      {children}
     </Paper>
   );
 }

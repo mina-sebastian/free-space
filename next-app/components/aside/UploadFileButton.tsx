@@ -13,9 +13,10 @@ import { useSession } from 'next-auth/react'
 
 interface UploadFileButtonProps {
   onClose: () => void;
+  outerFolderId: string;
 }
 
-const UploadFileButton: React.FC<UploadFileButtonProps> = ({ onClose }) => {
+const UploadFileButton: React.FC<UploadFileButtonProps> = ({ onClose, outerFolderId }) => {
 
   const { data: session } = useSession();
 
@@ -25,11 +26,16 @@ const UploadFileButton: React.FC<UploadFileButtonProps> = ({ onClose }) => {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  console.log("outerFolderId", outerFolderId)
+
   React.useEffect(() => {
     if (typeof window !== 'undefined') { // Ensures this code block runs only on the client
-      if(!!session && !!session.user){
+      if(!!session && !!session.user && !!outerFolderId){
         const up = new Uppy({
-          meta: { tkn: session.user.id},
+          meta: {
+            tkn: session.user.id,
+            folderId: outerFolderId
+          },
         })
             .use(Tus,
               {
@@ -41,7 +47,7 @@ const UploadFileButton: React.FC<UploadFileButtonProps> = ({ onClose }) => {
         return () => up.close();
       }
     }
-    }, [session]);
+    }, [session, outerFolderId]);
 
   return (
     <>

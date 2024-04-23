@@ -71,7 +71,7 @@ export default function AsideNewButton({outerFolderId}) {
         <Box sx={{ minWidth: 200 }}>
           <MenuItem onClick={handleNewFolderClick}>New Folder</MenuItem> {/* Call handleNewFolderClick on click */}
           <Divider/>
-          <UploadFileButton onClose={handleClose} />
+          <UploadFileButton onClose={handleClose} outerFolderId={outerFolderId} />
         </Box>
       </Menu>
     </>
