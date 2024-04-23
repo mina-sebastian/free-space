@@ -7,7 +7,6 @@ import WelcomeBg from "../../components/main/WelcomeBg";
 import SearchBar from "../../components/main/SearchBar";
 import { useSession} from "next-auth/react"
 import Uppy from '@uppy/core';
-import UploadModal from "../../components/UploadModal";
 
 export default function Home({uppy}: {uppy: Uppy}) {
 
@@ -16,7 +15,6 @@ export default function Home({uppy}: {uppy: Uppy}) {
   return (
     <DefaultBg>
       <WelcomeBg>
-        <UploadModal/>
         {session ? (
           <SearchBar/>):
           <Typography variant="h4" align="center">
