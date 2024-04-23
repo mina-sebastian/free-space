@@ -64,7 +64,7 @@ const cleanString = (str) => {
     }
 }
 
-const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="" }: FolderItemProps) => {
+const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="", outerFolderId }: FolderItemProps & { outerFolderId: (id: string) => void })  => {
     const [open, setOpen] = useState(false);
     const [subfolders, setSubfolders] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -108,6 +108,7 @@ const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="" }: Fold
         try {
           const data = await fetchSubfolders(folder.folderId);
           setSubfolders(data.folders);
+          outerFolderId(folder.folderId);
           setError(null);
         } catch (e) {
           setError(e.message);
@@ -134,7 +135,7 @@ const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="" }: Fold
               </ListItemButton>
             ) : (
               subfolders.map(subfolder => (
-                <FolderItem key={subfolder.folderId} folder={subfolder} innerFolders={subfolder.innerFolders} currentlyOpen={rest} parentPath={parentPath+"/"+folder.name} />
+                <FolderItem key={subfolder.folderId} folder={subfolder} innerFolders={subfolder.innerFolders} currentlyOpen={rest} parentPath={parentPath+"/"+folder.name} outerFolderId={outerFolderId}/>
               ))
             )}
           </List>
@@ -144,7 +145,7 @@ const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="" }: Fold
   };
   
 
-const FolderListButtons = ({ currentlyOpen }: {currentlyOpen: string}) => {
+const FolderListButtons = ({ currentlyOpen, outerFolderId }: { currentlyOpen: string, outerFolderId: (id: string) => void }) => {
     const [folders, setFolders] = useState([]);
     React.useEffect(() => {
       fetchSubfolders(null).then(data => {
@@ -156,10 +157,11 @@ const FolderListButtons = ({ currentlyOpen }: {currentlyOpen: string}) => {
   return (
     <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }} component="nav">
       {folders.map(folder => (
-        <FolderItem key={folder.folderId} folder={folder} innerFolders={folder.innerFolders} currentlyOpen={currentlyOpen} parentPath='/f' />
+        <FolderItem key={folder.folderId} folder={folder} innerFolders={folder.innerFolders} currentlyOpen={currentlyOpen} parentPath='/f' outerFolderId={outerFolderId}/>
       ))}
     </List>
   );
 };
 
 export default FolderListButtons;
+

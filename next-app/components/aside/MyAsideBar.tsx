@@ -58,7 +58,7 @@ export default function MyAsideBar({ currentlyOpen, open, setOpen }) {
             <AsideNewButton outerFolderId={outerFolderId} />
           </ListItem>
           <ListItem>
-            <FolderListButtons currentlyOpen={currentlyOpen}/>
+            <FolderListButtons currentlyOpen={currentlyOpen} outerFolderId={handleFolderChange}/>
           </ListItem>
           {[
             { text: 'Bin', icon: <DeleteIcon /> },

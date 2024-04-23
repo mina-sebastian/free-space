@@ -4,7 +4,6 @@ import MenuItem from '@mui/material/MenuItem';
 import AddIcon from '@mui/icons-material/Add';
 import { Divider, ListItemButton, ListItemIcon, ListItemText, Box } from '@mui/material';
 import UploadFileButton from './UploadFileButton';
-import UploadFolderButton from './UploadFolderButton';
 import axios from 'axios'; // Import axios for making API calls
 
 export default function AsideNewButton({outerFolderId}) {

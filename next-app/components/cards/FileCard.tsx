@@ -22,7 +22,7 @@ export default function FileCard({ itemId, itemType, name, children }) {
     console.log("New", itemType, "name:", newName, "ID:", itemId);
     if (newName !== null) {
       // If user entered a new name
-      axios.put(`/api/${itemType}/${itemId}/renameFolder`, { newName }) // Make API call to rename item
+      axios.put(`/api/${itemType}/${itemId}/rename`, { newName }) // Make API call to rename item
         .then(response => {
           console.log("Item renamed successfully:", response.data);
           // Optionally, you can update the UI to reflect the new name
@@ -38,7 +38,7 @@ export default function FileCard({ itemId, itemType, name, children }) {
   const handleDeleteItem = () => {
     if (window.confirm(`Are you sure you want to delete ${itemType} "${name}" and all its contents?`)) {
       // Confirm deletion
-      axios.delete(`/api/${itemType}/${itemId}/deleteFolder`) // Make API call to delete item
+      axios.delete(`/api/${itemType}/${itemId}/delete`) // Make API call to delete item
         .then(response => {
           console.log("Item deleted successfully:", response.data);
           // Optionally, you can update the UI to reflect the deletion
