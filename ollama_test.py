@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # Request data
     data = {
         "model": "llava",
-        "prompt": "You are an obedient LLM that extracts tags from images. Enumerate the words that describe this image separated by ','. Do not use connection words. Do not include numbers or rank. The tags should be 1 word long.",
+        "prompt": "You are an obedient LLM that extracts tags from images. Enumerate the distinct words that describe this image separated by ','. Do not use connection words. Do not include numbers or rank. The tags need to be 1 word long.",
         "images": [encoded_image]
     }
     
