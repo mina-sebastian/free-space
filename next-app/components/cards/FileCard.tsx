@@ -6,7 +6,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import axios from 'axios'; // Import axios for making API calls
 import { useRouter } from "next/router";
 
-export default function FileCard({ itemId, itemType, name, children }) {
+export default function FileCard({ itemId, itemType, name, children, onShare}) {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -78,6 +78,7 @@ export default function FileCard({ itemId, itemType, name, children }) {
       >
         <MenuItem onClick={handleRenameItem}>Rename</MenuItem>
         <MenuItem onClick={handleDeleteItem}>Delete</MenuItem>
+        <MenuItem onClick={() => onShare(itemType, itemId, name)}>Share</MenuItem>
         {/* Add other menu items here */}
       </Menu>
       {children}
