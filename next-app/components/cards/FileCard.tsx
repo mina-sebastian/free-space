@@ -7,7 +7,7 @@ import axios from 'axios'; // Import axios for making API calls
 import { useRouter } from "next/router";
 import Link from "next/link";
 
-export default function FileCard({ itemId, itemType, name, link=""}) {
+export default function FileCard({ itemId, itemType, name, link="", onShare}) {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
 

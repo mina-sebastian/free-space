@@ -27,6 +27,7 @@ const style = {
 };
 
 const TransitionsModal = React.forwardRef( (props, ref) => {
+  console.log(ref);
   const accessOptions = ["Anyone with the link", "Only authenticated users"];
   const radioOptions = ["Read", "Write", "Read-Write"];
   const [type, setType] = React.useState("");
@@ -40,7 +41,6 @@ const TransitionsModal = React.forwardRef( (props, ref) => {
   const [error, setError] = React.useState("");
   const [successMessage, setSuccessMessage] = React.useState('');
   const [copySuccess, setCopySuccess] = React.useState('');
-  const modalRef = React.useRef();
 
   React.useImperativeHandle(ref, () => ({
     open: (type, id, name) => {

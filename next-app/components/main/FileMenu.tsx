@@ -20,7 +20,7 @@ function FileMenu({ folders, files }) {
         {folders.map(folder => (
           <ListItem key={folder.folderId} disablePadding>
             {/* Pass the onDelete function to the FileCard component */}
-            <FileCard itemId={folder.folderId} itemType="folder" name={folder.name} onShare={modalRef.current.open}/>
+            <FileCard itemId={folder.folderId} itemType="folder" name={folder.name} onShare={modalRef.current?.open}/>
           </ListItem>
         ))}
       </List>
@@ -30,7 +30,7 @@ function FileMenu({ folders, files }) {
         {files.map(file => (
           <ListItem key={file.fileId}>
             {/* Pass the onDelete function to the FileCard component */}
-            <FileCard itemId={file.fileId} itemType="file" name={file.name} link={file.path} onShare={modalRef.current.open}/>
+            <FileCard itemId={file.fileId} itemType="file" name={file.name} link={file.path} onShare={modalRef.current?.open}/>
           </ListItem>
         ))}
       </List>
