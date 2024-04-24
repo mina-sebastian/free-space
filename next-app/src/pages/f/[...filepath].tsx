@@ -89,6 +89,28 @@ export async function getServerSideProps(context) {
 
   const user = session.user;
   const path = context.query.filepath;
+
+  const userDb = await prisma.user.findUnique({
+    where: {
+        email: session.user.email
+      }
+    });
+
+  const homeFolder = await prisma.folder.findFirst({
+    where: {
+      userId: userDb.id,
+      outerFolderId: null
+    }
+  });
+
+  if(!homeFolder){
+    await prisma.folder.create({
+      data: {
+        name: "Home",
+        userId: userDb.id
+      }
+    });
+  }
   
   const whereQuery = generateRecursiveOuterFolder(path.reverse());
 

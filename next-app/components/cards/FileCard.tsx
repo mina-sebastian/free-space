@@ -58,7 +58,7 @@ export default function FileCard({ itemId, itemType, name, link="", onShare}) {
   };
 
   return (
-    <Paper sx={{ width: '100%', height: 50, p: 2, display: 'flex', alignItems: 'center' }}>
+    <Paper sx={{ width: '100%', height: 50, p: 2, m:1, display: 'flex', alignItems: 'center' }}>
       <Typography 
         component={Link} 
         href={itemType === 'folder' ? `${router.asPath+"/"+name}` : link} // Set the href like this

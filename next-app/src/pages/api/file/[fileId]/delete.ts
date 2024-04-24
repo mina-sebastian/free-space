@@ -2,6 +2,20 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../../../../libs/prismadb';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]';
+import axios from 'axios';
+
+const sendDeleteRequest = async (path: string) => {
+  let config = {
+    headers: {
+      'Tus-Resumable': '1.0.0'
+    }
+  }
+  const resp = await axios.delete(path.replace('http://localhost', 'http://tusd:8080'), config);
+  
+  if (resp.statusText === 'OK') {
+    throw new Error('Failed to delete folder');
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,10 +28,25 @@ export default async function handler(
 
   const { fileId } = req.query; // Extract fileId from request query parameters
 
+  const fileToDelete = await prisma.file.findUnique({
+    where: {
+      fileId: fileId,
+    },
+    select: {
+      path: true,
+    }
+  });
+
+  if(!fileToDelete){
+    return res.status(404).json({ message: 'File not found' });
+  }
+
   try { 
-    await prisma.file.deleteMany({
+    await sendDeleteRequest(fileToDelete.path);
+
+    await prisma.file.delete({
       where: {
-        fileId: fileId, // Filter files by the provided fileId
+        fileId: fileId,
       },
     });
 
