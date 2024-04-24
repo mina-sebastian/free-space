@@ -112,7 +112,7 @@ export async function getServerSideProps(context) {
     });
   }
   
-  const whereQuery = generateRecursiveOuterFolder(path.reverse());
+const whereQuery = generateRecursiveOuterFolder([...path].reverse());
 
   const folder = await prisma.folder.findFirst({
     select: {
