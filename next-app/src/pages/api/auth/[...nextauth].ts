@@ -7,7 +7,6 @@ export const authOptions = {
 
 adapter: PrismaAdapter(prisma),
 
-
 callbacks: {
   async session({ session, user, token }: any) {
     session.user.admin = user.admin

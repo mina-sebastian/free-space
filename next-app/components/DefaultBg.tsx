@@ -4,8 +4,6 @@ import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import MyAppbar from './header/MyAppBar';
 import MyAsideBar from './aside/MyAsideBar';
-import RouterBreadcrumbs from './aside/FolderNavButton';
-import FileMenu from './main/FileMenu';
 
 
 const drawerWidth = 240;
@@ -40,29 +38,17 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'flex-end',
 }));
 
-export default function DefaultBg({children}) {
+export default function DefaultBg({currentlyOpen, children, folderId}) {
   const [open, setOpen] = React.useState(false);
-  
-  const [fetchedData, setFetchedData] = React.useState<any>(null); // State to store fetched data
-
-
-  // Callback function to handle fetched data
-  const handleDataFetched = (data: any) => {
-    // Set the fetched data to the state
-    setFetchedData(data);
-  };
-
 
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <MyAppbar open={open} setOpen={setOpen} />
-      <MyAsideBar open={open} setOpen={setOpen} onDataFetched={handleDataFetched} />
-        
+      <MyAsideBar open={open} setOpen={setOpen} currentlyOpen={currentlyOpen} folderId={folderId} />
       <Main open={open}>
         <DrawerHeader />
         {children}
-        <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} />
       </Main>
     </Box>
   );
