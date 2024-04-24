@@ -46,7 +46,8 @@ type FolderItemProps = {
     folder: FolderProps,
     innerFolders: [FolderProps],
     currentlyOpen: string,
-    parentPath: string
+    parentPath: string,
+    refetchId: string
 };
 
 const cleanString = (str) => {
@@ -64,7 +65,7 @@ const cleanString = (str) => {
     }
 }
 
-const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="", outerFolderId }: FolderItemProps & { outerFolderId: (id: string) => void })  => {
+const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="", outerFolderId, refetchId="initial" }: FolderItemProps & { outerFolderId: (id: string) => void })  => {
     const [open, setOpen] = useState(false);
     const [subfolders, setSubfolders] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -73,7 +74,15 @@ const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="", outerF
 
     const router = useRouter();
 
+
+
     const fielOpenData: string = cleanString(currentlyOpen);
+
+    useEffect(() => {
+      Promise.resolve().then(async () => {
+          handleFetchFolder(folder.folderId)
+      });
+    }, [refetchId]);
     
     useEffect(() => {
         
@@ -101,19 +110,22 @@ const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="", outerF
         router.push(parentPath+"/"+folder.name)
         setOpen(!open);
       if (!open && subfolders.length === 0) {
+        await handleFetchFolder(folder.folderId);
+      }
+    };
+
+    const handleFetchFolder = async (folderId) => {
         setLoading(true);
         try {
-          const data = await fetchSubfolders(folder.folderId);
+          const data = await fetchSubfolders(folderId);
           setSubfolders(data.folders);
-          outerFolderId(folder.folderId);
           setError(null);
         } catch (e) {
           setError(e.message);
         } finally {
           setLoading(false);
         }
-      }
-    };
+    }
   
     return (
       <>
@@ -132,7 +144,7 @@ const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="", outerF
               </ListItemButton>
             ) : (
               subfolders.map(subfolder => (
-                <FolderItem key={subfolder.folderId} folder={subfolder} innerFolders={subfolder.innerFolders} currentlyOpen={rest} parentPath={parentPath+"/"+folder.name} outerFolderId={outerFolderId}/>
+                <FolderItem key={subfolder.folderId} folder={subfolder} innerFolders={subfolder.innerFolders} currentlyOpen={rest} parentPath={parentPath+"/"+folder.name} outerFolderId={outerFolderId} refetchId={refetchId}/>
               ))
             )}
           </List>
@@ -142,7 +154,7 @@ const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="", outerF
   };
   
 
-const FolderListButtons = ({ currentlyOpen, outerFolderId }: { currentlyOpen: string, outerFolderId: (id: string) => void }) => {
+const FolderListButtons = ({ currentlyOpen, outerFolderId, refetchId }: { currentlyOpen: string, outerFolderId: (id: string) => void, refetchId: string}) => {
     const [folders, setFolders] = useState([]);
     React.useEffect(() => {
       fetchSubfolders(null).then(data => {
@@ -154,7 +166,7 @@ const FolderListButtons = ({ currentlyOpen, outerFolderId }: { currentlyOpen: st
   return (
     <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }} component="nav">
       {folders.map(folder => (
-        <FolderItem key={folder.folderId} folder={folder} innerFolders={folder.innerFolders} currentlyOpen={currentlyOpen} parentPath='/f' outerFolderId={outerFolderId}/>
+        <FolderItem key={folder.folderId} folder={folder} innerFolders={folder.innerFolders} currentlyOpen={currentlyOpen} parentPath='/f' outerFolderId={outerFolderId} refetchId={refetchId}/>
       ))}
     </List>
   );

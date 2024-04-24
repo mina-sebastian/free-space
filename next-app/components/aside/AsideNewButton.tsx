@@ -23,13 +23,11 @@ export default function AsideNewButton({outerFolderId}) {
 
   const handleNewFolderClick = () => {
     const newName = prompt(`Enter new folder name:`); 
-    console.log("New folder name:", newName, "Outer folder ID:", outerFolderId);
     // Make API call to create a new folder
     axios.post(`/api/folder/${outerFolderId}/createFolder`, { newName })
     .then(response => {
-      console.log('New folder created:', response.data);
       handleClose(); // Close the menu after successful creation
-      router.replace(router.asPath);
+      router.replace(router.asPath, undefined, { shallow: true });
       // You can add further actions, such as updating the UI with the new folder
     })
     .catch(error => {

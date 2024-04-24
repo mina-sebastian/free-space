@@ -38,14 +38,14 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'flex-end',
 }));
 
-export default function DefaultBg({currentlyOpen, children, folderId}) {
+export default function DefaultBg({currentlyOpen, children, folderId, refetchId}) {
   const [open, setOpen] = React.useState(false);
 
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <MyAppbar open={open} setOpen={setOpen} />
-      <MyAsideBar open={open} setOpen={setOpen} currentlyOpen={currentlyOpen} folderId={folderId} />
+      <MyAsideBar open={open} setOpen={setOpen} currentlyOpen={currentlyOpen} folderId={folderId} refetchId={refetchId} />
       <Main open={open}>
         <DrawerHeader />
         {children}

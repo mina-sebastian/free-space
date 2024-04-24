@@ -8,15 +8,16 @@ import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Link from '@mui/material/Link';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../api/auth/[...nextauth]';
+import cuid2 from '@paralleldrive/cuid2';
 
 export default function FolderPath({fetchedDataInit}) {
   const router = useRouter();
   const [fetchedData, setFetchedData] = React.useState<any>(fetchedDataInit);
+  const [refetchId, setRefetchId] = React.useState("initial");
 
   const getFolderByPath = async (path: string) => {
     try{
       const response = await axios.post('/api/folder/getFolderByPath', { path });
-      console.log("response", response.data);
       setFetchedData(response.data);
     } catch (error) {
       console.error('Error getting folder by path:', error);
@@ -28,6 +29,7 @@ export default function FolderPath({fetchedDataInit}) {
     if (filepath) {
       getFolderByPath(filepath as string);
     }
+    setRefetchId(cuid2.createId());
   }, [router.query.filepath]);
 
   const breadcrumbItems = React.useMemo(() => {
@@ -40,7 +42,7 @@ export default function FolderPath({fetchedDataInit}) {
   };
 
   return (
-    <DefaultBg currentlyOpen={router.query.filepath} folderId={fetchedData?.folderId}>
+    <DefaultBg currentlyOpen={router.query.filepath} folderId={fetchedData?.folderId} refetchId={refetchId}>
       <div role="presentation">
         <Breadcrumbs separator="›" aria-label="breadcrumb">
           {breadcrumbItems.map((item, index) => (
@@ -60,7 +62,7 @@ export default function FolderPath({fetchedDataInit}) {
           ))}
         </Breadcrumbs>
       </div>
-      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} />
+      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []}  />
     </DefaultBg>
   );
 }
@@ -84,8 +86,6 @@ export async function getServerSideProps(context) {
   if (!session) {
     return { error: 'Unauthorized', data: null };
   }
-
-  // console.log("context.query", context.query.filepath);
 
   const user = session.user;
   const path = context.query.filepath;

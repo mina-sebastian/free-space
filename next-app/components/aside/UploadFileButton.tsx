@@ -26,8 +26,6 @@ const UploadFileButton: React.FC<UploadFileButtonProps> = ({ onClose, outerFolde
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  console.log("outerFolderId", outerFolderId)
-
   React.useEffect(() => {
     if (typeof window !== 'undefined') { // Ensures this code block runs only on the client
       if(!!session && !!session.user && !!outerFolderId){
