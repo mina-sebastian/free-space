@@ -96,7 +96,6 @@ async function handlePreCreate(hookRequest: HookRequest, hookResponse: HookRespo
   } else if (!isValid) {
     throw new Error('No filename provided');
   } else {
-    console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", metaData);
     hookResponse.ChangeFileInfo = {
       ID: `frspc-${createId()}`,
       MetaData: {
@@ -139,7 +138,7 @@ async function handlePostFinish(hookRequest: HookRequest) {
   await prisma.file.create({
     data: {
       path: "http://localhost/files/" + ID,
-      name: MetaData.filename,
+      name: MetaData.filename ,
       size: Size,
       userId: user.id,
       folderId: folder.folderId
