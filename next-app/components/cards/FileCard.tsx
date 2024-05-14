@@ -82,9 +82,9 @@ export default function FileCard({ itemId, itemType, name, link="", onShare}) {
         open={Boolean(anchorEl)}
         onClose={handleClose}
       >
-        <MenuItem onClick={handleRenameItem}>Rename</MenuItem>
+        {(router.asPath.startsWith("/f/Home")) &&<MenuItem onClick={handleRenameItem}>Rename</MenuItem>}
         <MenuItem onClick={handleDeleteItem}>Delete</MenuItem>
-        <MenuItem onClick={() => onShare(itemType, itemId, name)}>Share</MenuItem>
+        {(router.asPath.startsWith("/f/Home")) && <MenuItem onClick={() => onShare(itemType, itemId, name)}>Share</MenuItem>}
         {/* Add other menu items here */}
       </Menu>
     </Paper>

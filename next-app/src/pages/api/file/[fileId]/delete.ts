@@ -11,11 +11,27 @@ const sendDeleteRequest = async (path: string) => {
     }
   }
   const resp = await axios.delete(path.replace('http://localhost', 'http://tusd:8080'), config);
-  
+
   if (resp.statusText === 'OK') {
     throw new Error('Failed to delete folder');
   }
 }
+
+const findHighestAncestor = async (folderId: string): Promise<any> => {
+  let currentFolder = await prisma.folder.findUnique({
+    where: { folderId },
+    include: { outerFolder: true },
+  });
+
+  while (currentFolder?.outerFolder) {
+    currentFolder = await prisma.folder.findUnique({
+      where: { folderId: currentFolder.outerFolder.folderId },
+      include: { outerFolder: true },
+    });
+  }
+
+  return currentFolder;
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -38,23 +54,53 @@ export default async function handler(
     }
   });
 
-
-  if(!fileToDelete){
+  if (!fileToDelete) {
     return res.status(404).json({ message: 'File not found' });
   }
 
-  try { 
-    await sendDeleteRequest(fileToDelete.path);
+  try {
+    // Get the highest ancestor folder
+    const highestAncestor = await findHighestAncestor(fileToDelete.folder.folderId);
 
-    await prisma.file.delete({
+    // Get the "Bin" folder
+    const binFolder = await prisma.folder.findFirst({
       where: {
-        fileId: fileId as string,
-      },
+        userId: session.user.id,
+        outerFolderId: null,
+        name: "Bin"
+      }
     });
 
-    res.status(200).json({ message: 'File successfully deleted' });
+    if (!binFolder) {
+      return res.status(500).json({ message: 'Bin folder not found' });
+    }
+
+    if (highestAncestor.folderId === binFolder.folderId) {
+      // If the highest ancestor folder is the "Bin" folder, delete the file
+      await sendDeleteRequest(fileToDelete.path);
+
+      await prisma.file.delete({
+        where: {
+          fileId: fileId as string,
+        },
+      });
+
+      res.status(200).json({ message: 'File successfully deleted' });
+    } else {
+      // If the highest ancestor folder is not the "Bin" folder, move the file to the "Bin" folder
+      await prisma.file.update({
+        where: {
+          fileId: fileId as string,
+        },
+        data: {
+          folderId: binFolder.folderId,
+        },
+      });
+
+      res.status(200).json({ message: 'File moved to Bin' });
+    }
   } catch (error) {
-    console.error('Error deleting file:', error);
+    console.error('Error handling file:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 }

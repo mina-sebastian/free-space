@@ -9,6 +9,7 @@ import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import FolderListButtons from './FolderListButtons';
+import { useRouter } from 'next/router';
 
 const drawerWidth = 240;
 
@@ -31,6 +32,7 @@ export default function MyAsideBar({ currentlyOpen, open, setOpen, folderId, ref
     setFolderId(id);
   };
   
+  const router = useRouter();
 
   return (
     <Drawer
@@ -54,9 +56,9 @@ export default function MyAsideBar({ currentlyOpen, open, setOpen, folderId, ref
       <Divider />
       <Box sx={{ overflow: 'auto' }}>
         <List>
-          <ListItem disablePadding>
+          {router.asPath.startsWith("/f/Home") && <ListItem disablePadding>
             <AsideNewButton outerFolderId={folderId} />
-          </ListItem>
+          </ListItem>}
           <ListItem>
             <FolderListButtons currentlyOpen={currentlyOpen} outerFolderId={handleFolderChange} refetchId={refetchId}/>
           </ListItem>
