@@ -65,7 +65,6 @@ model File {
   path        String
   name        String
   size        Float
-  deleted     Boolean  @default(false)
   user        User     @relation(fields: [userId], references: [id])
   userId      String
   folder      Folder   @relation(fields: [folderId], references: [folderId])

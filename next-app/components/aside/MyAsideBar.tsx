@@ -60,19 +60,16 @@ export default function MyAsideBar({ currentlyOpen, open, setOpen, folderId, ref
           <ListItem>
             <FolderListButtons currentlyOpen={currentlyOpen} outerFolderId={handleFolderChange} refetchId={refetchId}/>
           </ListItem>
-          {[
-            { text: 'Bin', icon: <DeleteIcon /> },
-            { text: 'Storage', icon: <CloudIcon /> }
-          ].map((item, index) => (
-            <ListItem key={item.text} disablePadding >
+
+            <ListItem disablePadding >
               <ListItemButton>
                 <ListItemIcon>
-                  {item.icon}
+                  <CloudIcon />
                 </ListItemIcon>
-                <ListItemText primary={item.text} />
+                <ListItemText primary={"Storage"} />
               </ListItemButton>
             </ListItem>
-          ))}
+
         </List>
       </Box>
       <Divider />

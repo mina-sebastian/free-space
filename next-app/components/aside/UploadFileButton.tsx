@@ -10,6 +10,7 @@ import '@uppy/drag-drop/dist/style.css'
 import '@uppy/file-input/dist/style.css'
 import '@uppy/progress-bar/dist/style.css'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/router';
 
 interface UploadFileButtonProps {
   onClose: () => void;
@@ -26,6 +27,8 @@ const UploadFileButton: React.FC<UploadFileButtonProps> = ({ onClose, outerFolde
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  const router = useRouter();
+
   React.useEffect(() => {
     if (typeof window !== 'undefined') { // Ensures this code block runs only on the client
       if(!!session && !!session.user && !!outerFolderId){
@@ -41,6 +44,10 @@ const UploadFileButton: React.FC<UploadFileButtonProps> = ({ onClose, outerFolde
               })
             ;
         setUppy(up);
+
+        up.on('complete', (result) => {
+          router.replace(router.asPath);
+      })
         
         return () => up.close();
       }
