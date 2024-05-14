@@ -99,7 +99,16 @@ export async function getServerSideProps(context) {
   const homeFolder = await prisma.folder.findFirst({
     where: {
       userId: userDb.id,
-      outerFolderId: null
+      outerFolderId: null,
+      name: "Home"
+    }
+  });
+
+  const binFolder = await prisma.folder.findFirst({
+    where: {
+      userId: userDb.id,
+      outerFolderId: null,
+      name: "Bin"
     }
   });
 
@@ -107,6 +116,15 @@ export async function getServerSideProps(context) {
     await prisma.folder.create({
       data: {
         name: "Home",
+        userId: userDb.id
+      }
+    });
+  }
+
+  if(!binFolder){
+    await prisma.folder.create({
+      data: {
+        name: "Bin",
         userId: userDb.id
       }
     });
@@ -130,7 +148,6 @@ const whereQuery = generateRecursiveOuterFolder([...path].reverse());
         select: {
           fileId: true,
           path: true,
-          deleted: true,
           name: true,
           size: true,
           user: {

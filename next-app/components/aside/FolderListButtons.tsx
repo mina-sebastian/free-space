@@ -10,6 +10,8 @@ import FolderIcon from '@mui/icons-material/Folder'; // Icon for subfolders
 import CircularProgress from '@mui/material/CircularProgress';
 import axios from 'axios';
 import { useRouter } from 'next/router';
+import DeleteIcon from '@mui/icons-material/Delete';
+import HomeIcon from '@mui/icons-material/Home';
 
 async function fetchSubfolders(parentId) {
   try {
@@ -47,7 +49,8 @@ type FolderItemProps = {
     innerFolders: [FolderProps],
     currentlyOpen: string,
     parentPath: string,
-    refetchId: string
+    refetchId: string,
+    givenIcon: any
 };
 
 const cleanString = (str) => {
@@ -65,7 +68,7 @@ const cleanString = (str) => {
     }
 }
 
-const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="", outerFolderId, refetchId="initial" }: FolderItemProps & { outerFolderId: (id: string) => void })  => {
+const FolderItem = ({  folder, innerFolders, currentlyOpen, parentPath="", outerFolderId, refetchId="initial", givenIcon=<FolderIcon/> }: FolderItemProps & { outerFolderId: (id: string) => void })  => {
     const [open, setOpen] = useState(false);
     const [subfolders, setSubfolders] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -73,8 +76,6 @@ const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="", outerF
     const [rest, setRest] = useState("-");
 
     const router = useRouter();
-
-
 
     const fielOpenData: string = cleanString(currentlyOpen);
 
@@ -131,7 +132,7 @@ const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="", outerF
       <>
         <ListItemButton onClick={handleToggle}>
           <ListItemIcon>
-            <FolderIcon />
+            {givenIcon}
           </ListItemIcon>
           <ListItemText primary={folder.name} />
           {(innerFolders.length > 0) && (loading ? <CircularProgress size={24} /> : open ? <ExpandLess /> : <ExpandMore />)}
@@ -144,7 +145,7 @@ const FolderItem = ({ folder, innerFolders, currentlyOpen, parentPath="", outerF
               </ListItemButton>
             ) : (
               subfolders.map(subfolder => (
-                <FolderItem key={subfolder.folderId} folder={subfolder} innerFolders={subfolder.innerFolders} currentlyOpen={rest} parentPath={parentPath+"/"+folder.name} outerFolderId={outerFolderId} refetchId={refetchId}/>
+                <FolderItem key={subfolder.folderId} folder={subfolder} innerFolders={subfolder.innerFolders} currentlyOpen={rest} parentPath={parentPath+"/"+folder.name} outerFolderId={outerFolderId} refetchId={refetchId} givenIcon={<FolderIcon/>}/>
               ))
             )}
           </List>
@@ -164,9 +165,18 @@ const FolderListButtons = ({ currentlyOpen, outerFolderId, refetchId }: { curren
       });
     }, []);
   return (
-    <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }} component="nav">
+    <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', ml: -4 }} component="nav">
       {folders.map(folder => (
-        <FolderItem key={folder.folderId} folder={folder} innerFolders={folder.innerFolders} currentlyOpen={currentlyOpen} parentPath='/f' outerFolderId={outerFolderId} refetchId={refetchId}/>
+        <FolderItem
+          key={folder.folderId}
+          folder={folder}
+          innerFolders={folder.innerFolders}
+          currentlyOpen={currentlyOpen}
+          parentPath='/f'
+          outerFolderId={outerFolderId}
+          refetchId={refetchId}
+          givenIcon={folder.name === "Bin" ? <DeleteIcon/> : <HomeIcon/>}
+        />
       ))}
     </List>
   );

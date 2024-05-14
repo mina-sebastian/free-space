@@ -21,7 +21,6 @@ type FileType = {
   fileId: string;
   name: string;
   size: Number;
-  deleted: boolean;
   dimensiune: number;
 };
 
@@ -89,7 +88,6 @@ export default async function handler(
             select: {
               fileId: true,
               path: true,
-              deleted: true,
               name: true,
               size: true,
               user:{

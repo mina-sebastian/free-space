@@ -26,7 +26,6 @@ export default async function handler(
             fileId: true,
             path: true,
             name: true, // Presupunând că "denumire" ar trebui să fie "name"
-            deleted: true,
             size: true, // "dimensiune" a fost redenumit în "size"
             folder: true,
           }

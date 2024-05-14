@@ -34,8 +34,10 @@ export default async function handler(
     },
     select: {
       path: true,
+      folder: true,
     }
   });
+
 
   if(!fileToDelete){
     return res.status(404).json({ message: 'File not found' });
