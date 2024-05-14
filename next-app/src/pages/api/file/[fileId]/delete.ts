@@ -21,7 +21,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<{ message: string }>
 ) {
-  const session = await getServerSession(req, res, authOptions);
+  const session = await getServerSession(req, res, authOptions as any);
   if (!session) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
@@ -30,7 +30,7 @@ export default async function handler(
 
   const fileToDelete = await prisma.file.findUnique({
     where: {
-      fileId: fileId,
+      fileId: fileId as string,
     },
     select: {
       path: true,
@@ -46,7 +46,7 @@ export default async function handler(
 
     await prisma.file.delete({
       where: {
-        fileId: fileId,
+        fileId: fileId as string,
       },
     });
 

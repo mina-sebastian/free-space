@@ -71,6 +71,7 @@ model File {
   folder      Folder   @relation(fields: [folderId], references: [folderId])
   folderId    String
   links       Link[]
+  tags        Tag[]
 }
 
 model Link {
@@ -81,4 +82,10 @@ model Link {
   fileId       String?
   folder       Folder?   @relation(fields: [folderId], references: [folderId])
   folderId     String?
+}
+
+model Tag {
+  tagId   String   @id @default(cuid())
+  name    String
+  files   File[]
 }
