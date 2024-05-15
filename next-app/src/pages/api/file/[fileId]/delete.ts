@@ -10,7 +10,7 @@ const sendDeleteRequest = async (path: string) => {
       'Tus-Resumable': '1.0.0'
     }
   }
-  const resp = await axios.delete(path.replace('http://localhost', 'http://tusd:8080'), config);
+  const resp = await axios.delete("http://tusd:8080/files/"+path, config);
 
   if (resp.statusText === 'OK') {
     throw new Error('Failed to delete folder');
@@ -37,8 +37,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<{ message: string }>
 ) {
-  const session = await getServerSession(req, res, authOptions as any);
-  if (!session) {
+  const session = await getServerSession(req, res, authOptions);
+  if (!session && !session.user) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
@@ -49,7 +49,11 @@ export default async function handler(
       fileId: fileId as string,
     },
     select: {
-      path: true,
+      hashFile:{
+        select:{
+          path: true
+        }
+      },
       folder: true,
     }
   });
@@ -77,7 +81,7 @@ export default async function handler(
 
     if (highestAncestor.folderId === binFolder.folderId) {
       // If the highest ancestor folder is the "Bin" folder, delete the file
-      await sendDeleteRequest(fileToDelete.path);
+      await sendDeleteRequest(fileToDelete.hashFile.path);
 
       await prisma.file.delete({
         where: {

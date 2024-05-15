@@ -20,7 +20,7 @@ export default async function handler(
     // Update the folder name in the database
     await prisma.folder.update({
       where: {
-        folderId: folderId, // Filter folders by the provided folderId
+        folderId: folderId as string, // Filter folders by the provided folderId
       },
       data: {
         name: newName,

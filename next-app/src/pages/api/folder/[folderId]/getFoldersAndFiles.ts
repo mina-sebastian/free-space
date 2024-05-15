@@ -51,7 +51,7 @@ export default async function handler(
   // Retrieve files directly associated with the specified folder
   const files = await prisma.file.findMany({
     where: {
-      folderId: folderId, // Filter files by the provided folderId
+      folderId: folderId as string, // Filter files by the provided folderId
     },
   });
 

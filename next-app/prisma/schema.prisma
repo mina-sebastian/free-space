@@ -61,16 +61,29 @@ model Folder {
 }
 
 model File {
-  fileId      String   @id @default(cuid())
-  path        String
-  name        String
-  size        Float
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String
-  folder      Folder   @relation(fields: [folderId], references: [folderId])
-  folderId    String
-  links       Link[]
-  tags        Tag[]
+  fileId    String   @id @default(cuid())
+  
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  folder    Folder   @relation(fields: [folderId], references: [folderId])
+  folderId  String
+
+  name   String
+
+  links     Link[]
+
+  hashFile  FileHash @relation(fields: [hash], references: [hash])
+  hash      String
+}
+
+model FileHash {
+  hash   String   @id
+
+  path   String
+  size   Float
+
+  files  File[]
+  tags   Tag[]
 }
 
 model Link {
@@ -86,5 +99,5 @@ model Link {
 model Tag {
   tagId   String   @id @default(cuid())
   name    String
-  files   File[]
+  fileHashes   FileHash[]
 }

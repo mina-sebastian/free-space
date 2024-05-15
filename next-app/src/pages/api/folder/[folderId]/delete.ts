@@ -27,7 +27,7 @@ const sendDeleteRequest = async (path: string) => {
       'Tus-Resumable': '1.0.0'
     }
   }
-  const resp = await axios.delete(path.replace('http://localhost', 'http://tusd:8080'), config);
+  const resp = await axios.delete("http://tusd:8080/files/"+path, config);
 
   if (resp.statusText === 'OK') {
     throw new Error('Failed to delete folder');
@@ -94,12 +94,16 @@ export default async function handler(
         folderId: folderId,
       },
       select: {
-        path: true,
+        hashFile:{
+          select:{
+            path: true
+          }
+        }
       }
     });
 
     for (const file of filesToDelete) {
-      await sendDeleteRequest(file.path);
+      await sendDeleteRequest(file.hashFile.path);
     }
 
     await prisma.file.deleteMany({
