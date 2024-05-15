@@ -49,28 +49,28 @@ model Session {
 }
 
 model Folder {
-  folderId     Int      @id
-  name         String
-  user         User     @relation(fields: [userId], references: [id])
-  userId       String
-  outerFolder  Folder?  @relation("OuterFolder", fields: [outerFolderId], references: [folderId])
-  outerFolderId Int?
-  innerFolders Folder[] @relation("OuterFolder")
-  files        File[]
-  links        Link[]
+  folderId      String   @id @default(cuid())
+  name          String
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  outerFolder   Folder?  @relation("OuterFolder", fields: [outerFolderId], references: [folderId])
+  outerFolderId String?
+  innerFolders  Folder[] @relation("OuterFolder")
+  files         File[]
+  links         Link[]
 }
 
 model File {
-  fileId      Int      @id
+  fileId      String   @id @default(cuid())
   path        String
-  denumire    String
-  deleted     Boolean
-  dimensiune  Float
+  name        String
+  size        Float
   user        User     @relation(fields: [userId], references: [id])
   userId      String
   folder      Folder   @relation(fields: [folderId], references: [folderId])
-  folderId    Int
+  folderId    String
   links       Link[]
+  tags        Tag[]
 }
 
 model Link {
@@ -78,7 +78,13 @@ model Link {
   expires      DateTime?
   permission   String
   file         File?     @relation(fields: [fileId], references: [fileId])
-  fileId       Int?
+  fileId       String?
   folder       Folder?   @relation(fields: [folderId], references: [folderId])
-  folderId     Int?
+  folderId     String?
+}
+
+model Tag {
+  tagId   String   @id @default(cuid())
+  name    String
+  files   File[]
 }
