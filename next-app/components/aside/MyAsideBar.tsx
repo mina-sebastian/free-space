@@ -1,7 +1,7 @@
 // MyAsideBar.js
 import React, { useState } from 'react';
 import AsideNewButton from './AsideNewButton';
-import { Box, Divider, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { Avatar, Box, Divider, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudIcon from '@mui/icons-material/Cloud';
 import Drawer from '@mui/material/Drawer';
@@ -10,6 +10,7 @@ import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import FolderListButtons from './FolderListButtons';
 import { useRouter } from 'next/router';
+import ImageCard from '../cards/ImageCard';
 
 const drawerWidth = 240;
 
@@ -49,6 +50,20 @@ export default function MyAsideBar({ currentlyOpen, open, setOpen, folderId, ref
       open={open}
     >
       <DrawerHeader>
+        <Avatar
+            sx={{
+                width: 90,
+                height: 90,
+                backgroundColor: 'transparent',
+                marginRight:'auto',
+                marginLeft:'auto',
+                marginBottom: -5,
+                marginTop: -5
+            }}
+
+            src = {"/Free-Space_logo.png"}
+        >
+        </Avatar>
         <IconButton onClick={handleDrawerClose}>
           <ChevronLeftIcon />
         </IconButton>
