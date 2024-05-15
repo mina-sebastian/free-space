@@ -44,7 +44,7 @@ services:
   tusd:
     container_name: tusd
     image: tusproject/tusd:latest
-    command: -behind-proxy -disable-download -hooks-http http://localhost/api/cloud/hooks
+    command: -behind-proxy -hooks-http http://next-app:3000/api/cloud/hooks
     restart: always
     ports:
       - 8080:8080
@@ -89,6 +89,7 @@ services:
       - .env
     volumes:
       - ./next-app/src:/app/src
+      - ./next-app/components:/app/components
       - ./next-app/public:/app/public
       - ./next-app/prisma:/app/prisma
     restart: always

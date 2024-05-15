@@ -1,14 +1,16 @@
 import type { AppProps } from "next/app";
 
+import { SessionProvider } from "next-auth/react";
 import { ThemeProvider, createTheme, responsiveFontSizes } from '@mui/material/styles';
 import { CssBaseline } from "@mui/material";
 
-import { Ubuntu } from "next/font/google"
+import { Ubuntu } from "next/font/google";
+
 
 const font = Ubuntu({
   weight: '500',
   subsets: ['latin'],
-})
+});
 
 const theme = responsiveFontSizes(createTheme({
   spacing: 5,
@@ -21,7 +23,6 @@ const theme = responsiveFontSizes(createTheme({
       default: '#13093c',
       paper: '#1b074f',
     },
-    
   },
   components: {
     MuiAppBar: {
@@ -33,16 +34,13 @@ const theme = responsiveFontSizes(createTheme({
       },
     },  
   },
-  
   shape: {
     borderRadius: 15,
   },
 }));
 
+export default function MyApp({ Component, session, pageProps }: AppProps & { session: any }) {
 
-import { SessionProvider } from "next-auth/react"
-
-export default function MyApp({ Component, session, pageProps }: AppProps) {
   return (
     <SessionProvider session={session}>
       <ThemeProvider theme={theme}>
