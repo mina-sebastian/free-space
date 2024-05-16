@@ -180,7 +180,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
               checked={state.checkedFiles.includes(file.fileId)}
               onChange={() => dispatch({ type: 'TOGGLE_FILE', fileId: file.fileId })}
             />
-            <FileCard itemId={file.fileId} itemType="file" name={file.name} link={"/"+file.fileId} onShare={() => modalRef.current?.open()} onMenuClick={handleMenuClick} />
+            <FileCard itemId={file.fileId} itemType="file" name={file.name} link={`/v/${file.fileId}`} onShare={() => modalRef.current?.open()} onMenuClick={handleMenuClick} />
           </ListItem>
         ))}
       </List>

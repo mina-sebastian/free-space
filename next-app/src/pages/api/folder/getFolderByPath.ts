@@ -74,7 +74,7 @@ export default async function handler(
     const pathArray = Array.isArray(path) ? path : [path];
     whereQuery = generateRecursiveOuterFolder(pathArray.reverse());
   }
-  console.log("query", whereQuery);
+  // console.log("query", whereQuery);
     const folder = await prisma.folder.findFirst({
       select: {
           folderId: true,
@@ -112,7 +112,7 @@ export default async function handler(
         ...whereQuery
       },
     });
-  console.log("FILES:", folder.files);
+  // console.log("FILES:", folder.files);
 
   const updatedFiles = folder.files.map((file) => ({
     ...file,

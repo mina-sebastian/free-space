@@ -10,10 +10,10 @@ const sendDeleteRequest = async (path: string) => {
       'Tus-Resumable': '1.0.0'
     }
   }
-  const resp = await axios.delete("http://tusd:8080/files/"+path, config);
-
-  if (resp.statusText === 'OK') {
-    throw new Error('Failed to delete folder');
+  try{
+    const resp = await axios.delete("http://tusd:8080/files/"+path, config);
+  }catch(e){
+    console.log(e);
   }
 }
 
@@ -35,7 +35,7 @@ const findHighestAncestor = async (folderId: string): Promise<any> => {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<{ message: string }>
+  res: NextApiResponse<{ message: string, dels?: any }>
 ) {
   const session = await getServerSession(req, res, authOptions);
   if (!session && !session.user) {
@@ -49,11 +49,6 @@ export default async function handler(
       fileId: fileId as string,
     },
     select: {
-      hashFile:{
-        select:{
-          path: true
-        }
-      },
       folder: true,
     }
   });
@@ -81,7 +76,6 @@ export default async function handler(
 
     if (highestAncestor.folderId === binFolder.folderId) {
       // If the highest ancestor folder is the "Bin" folder, delete the file
-      await sendDeleteRequest(fileToDelete.hashFile.path);
 
       await prisma.file.delete({
         where: {
@@ -89,7 +83,27 @@ export default async function handler(
         },
       });
 
-      res.status(200).json({ message: 'File successfully deleted' });
+      
+
+      const emptyHashes = await prisma.fileHash.findMany({
+        where: {
+          size: {
+            gte: 0 //if the size is lower than 0, it means that the file is not uploaded yet
+          },
+          files: {
+            none: {}
+          }
+        }
+      });
+    
+      
+      for (const toDelHash of emptyHashes) {
+        await sendDeleteRequest(toDelHash.path);
+      }
+
+
+
+      res.status(200).json({ message: 'File successfully deleted', dels: emptyHashes });
     } else {
       // If the highest ancestor folder is not the "Bin" folder, move the file to the "Bin" folder
       await prisma.file.update({

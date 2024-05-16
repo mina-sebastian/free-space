@@ -29,11 +29,10 @@ export default async function handler(
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
-  console.log("session", session);
   const user = await session.user;
 
   const { folderId } = req.query // Extract folderId from request query parameters
-  console.log("folderId", folderId);
+  // console.log("folderId", folderId);
 
   let folderQuery = {};
 

@@ -27,12 +27,13 @@ const sendDeleteRequest = async (path: string) => {
       'Tus-Resumable': '1.0.0'
     }
   }
-  const resp = await axios.delete("http://tusd:8080/files/"+path, config);
-
-  if (resp.statusText === 'OK') {
-    throw new Error('Failed to delete folder');
+  try{
+    const resp = await axios.delete("http://tusd:8080/files/"+path, config);
+  }catch(e){
+    console.log(e);
   }
 }
+
 
 const findHighestAncestor = async (folderId: string): Promise<any> => {
   let currentFolder = await prisma.folder.findUnique({
@@ -49,6 +50,37 @@ const findHighestAncestor = async (folderId: string): Promise<any> => {
 
   return currentFolder;
 };
+
+
+  // Function to delete folder and its children recursively
+  const deleteFolderAndChildren = async (folderId: string) => {
+    // Find subfolders of the current folder
+    const subfolders = await prisma.folder.findMany({
+      where: {
+        outerFolderId: folderId,
+      },
+    });
+
+    // Recursively delete subfolders and their children
+    for (const subfolder of subfolders) {
+      await deleteFolderAndChildren(subfolder.folderId);
+    }
+
+    // Delete files in the folder
+    await prisma.file.deleteMany({
+      where: {
+        folderId: folderId,
+      },
+
+    });
+
+    // Finally, delete the folder itself
+    await prisma.folder.delete({
+      where: {
+        folderId: folderId,
+      },
+    });
+  };
 
 export default async function handler(
   req: NextApiRequest,
@@ -74,51 +106,7 @@ export default async function handler(
     return res.status(500).json({ message: 'Bin folder not found' });
   }
 
-  // Function to delete folder and its children recursively
-  const deleteFolderAndChildren = async (folderId: string) => {
-    // Find subfolders of the current folder
-    const subfolders = await prisma.folder.findMany({
-      where: {
-        outerFolderId: folderId,
-      },
-    });
 
-    // Recursively delete subfolders and their children
-    for (const subfolder of subfolders) {
-      await deleteFolderAndChildren(subfolder.folderId);
-    }
-
-    // Delete files in the folder
-    const filesToDelete = await prisma.file.findMany({
-      where: {
-        folderId: folderId,
-      },
-      select: {
-        hashFile:{
-          select:{
-            path: true
-          }
-        }
-      }
-    });
-
-    for (const file of filesToDelete) {
-      await sendDeleteRequest(file.hashFile.path);
-    }
-
-    await prisma.file.deleteMany({
-      where: {
-        folderId: folderId,
-      },
-    });
-
-    // Finally, delete the folder itself
-    await prisma.folder.delete({
-      where: {
-        folderId: folderId,
-      },
-    });
-  };
 
   // Find the highest ancestor folder
   const highestAncestor = await findHighestAncestor(folderId as string);
@@ -136,6 +124,22 @@ export default async function handler(
         outerFolderId: binFolder.folderId,
       },
     });
+  }
+
+  const emptyHashes = await prisma.fileHash.findMany({
+    where: {
+      size: {
+        gte: 0 //if the size is lower than 0, it means that the file is not uploaded yet
+      },
+      files: {
+        none: {}
+      }
+    }
+  });
+
+  
+  for (const toDelHash of emptyHashes) {
+    await sendDeleteRequest(toDelHash.path);
   }
 
   res.status(200).json({ message: 'Operation completed successfully' });

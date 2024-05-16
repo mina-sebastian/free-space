@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../../../libs/prismadb';
 import { createId } from '@paralleldrive/cuid2';
+import { log } from 'console';
 
 // Type definitions for incoming hook requests
 type HookRequest = {
@@ -53,7 +54,7 @@ export default async function (
       throw new Error('Method Not Allowed');
     }
 
-    console.log('Received hook request:', req.body, req.body.Event.Upload.MetaData, req.body.Event.Upload.Storage);
+    // console.log('Received hook request:', req.body, req.body.Event.Upload.MetaData, req.body.Event.Upload.Storage);
 
     const hookRequest: HookRequest = req.body;
 
@@ -64,6 +65,8 @@ export default async function (
       case 'post-finish':
         await handlePostFinish(hookRequest);
         break;
+      case 'post-terminate':
+        await handlePostDelete(hookRequest);
       default:
         hookResponse.RejectUpload = true;
         hookResponse.HTTPResponse.StatusCode = 200;
@@ -80,6 +83,34 @@ export default async function (
   }
 }
 
+async function handlePostDelete(hookRequest: HookRequest) {
+  const { MetaData } = hookRequest.Event.Upload;
+
+  // console.log("DELETIING");
+  // console.log(hookRequest);
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: MetaData.tkn
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (!user) {
+    throw new Error('Not Authorized');
+  }
+
+  // console.log("DELETIING");
+  await prisma.fileHash.delete({
+    where: {
+      hash: MetaData.hash,
+    }
+  });
+  // console.log(rez);
+}
+
 /**
  * Handle pre-create hook type by validating user and upload metadata.
  */
@@ -93,25 +124,33 @@ async function handlePreCreate(hookRequest: HookRequest, hookResponse: HookRespo
     }
   });
 
-  const fileNumber = await prisma.file.count({
-    where: {
-      hash: metaData.hash,
-    }
-  });
 
   if (!user) {
     throw new Error('Not Authorized');
   } else if (!isValid) {
     throw new Error('No filename provided');
   } else {
-    if (fileNumber > 0) {
+    
+    const hashedFs = await prisma.fileHash.count({
+      where: {
+        hash: metaData.hash,
+        size:{
+          gt: -1
+        }
+      }
+    });
+    
+    if(hashedFs > 0){
       hookResponse.RejectUpload = true;
       hookResponse.HTTPResponse.StatusCode = 201;
       hookResponse.HTTPResponse.Body = "File already in the system.";
       return;
     }
+
+    
+    
     hookResponse.ChangeFileInfo = {
-      ID: `frspc-${createId()}`,
+      ID: metaData.gvnid,
       MetaData: {
         tkn: metaData.tkn,
         folderId: metaData.folderId,
@@ -161,11 +200,12 @@ async function handlePostFinish(hookRequest: HookRequest) {
     throw new Error('Folder not found');
   }
 
-  const fileHash = await prisma.fileHash.create({
-    data: {
+  await prisma.fileHash.update({
+    where: {
       hash: MetaData.hash,
+    },
+    data: {
       size: Size,
-      path: ID,
     }
   });
 
@@ -174,7 +214,7 @@ async function handlePostFinish(hookRequest: HookRequest) {
       userId: user.id,
       folderId: folder.folderId,
       name: MetaData.filename,
-      hash: fileHash.hash,
+      hash: MetaData.hash,
       }
     });
 }

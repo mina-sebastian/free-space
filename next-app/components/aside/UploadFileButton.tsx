@@ -18,6 +18,14 @@ interface UploadFileButtonProps {
   outerFolderId: string;
 }
 
+async function generateFileHash(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
 const UploadFileButton: React.FC<UploadFileButtonProps> = ({ onClose, outerFolderId }) => {
   const { data: session } = useSession();
   const [uppy, setUppy] = React.useState<Uppy>(null);
@@ -27,82 +35,80 @@ const UploadFileButton: React.FC<UploadFileButtonProps> = ({ onClose, outerFolde
   const router = useRouter();
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') { // Ensures this code block runs only on the client
-      if (!!session && !!session.user && !!outerFolderId) {
-        const up = new Uppy({
-          meta: {
-            tkn: session.user.id,
-            folderId: outerFolderId
-          },
-          debug: true,
+    if (typeof window !== 'undefined' && session?.user && outerFolderId) {
+      const up = new Uppy({
+        meta: {
+          tkn: session.user.id,
+          folderId: outerFolderId
+        },
+        debug: false,
+      })
+        .use(Tus, {
+          endpoint: 'http://localhost/files/',
+          onShouldRetry: (file, options) => {
+            // options.
+            return false;
+          }
+        });
+
+        up.on('file-added', async (file) => {
+          const hash = await generateFileHash(file.data);
+          up.setFileMeta(file.id, { hash });
         })
-          .use(Tus, {
-            endpoint: 'http://localhost/files/',
-          });
 
-        up.addPreProcessor((filesstr) => {
-          up.setOptions({
-            autoProceed: false,
-          });
-          return new Promise((resolve, reject) => {
-            const processFile = (file) => {
-              return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                  const fileContent = reader.result as ArrayBuffer;
-                  const wordArray = CryptoJS.lib.WordArray.create(fileContent);
-                  const hash = CryptoJS.SHA256(wordArray).toString();
-                  console.log(`File hash: ${hash}`);
-                  up.setFileMeta(file.id, { hash });
-                  resolve(hash);
-                };
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(file.data);
-              });
-            };
+      up.addPreProcessor((filesstr) => {
+        up.setOptions({ autoProceed: false });
 
-            Promise.all(filesstr.map(filestr => processFile(up.getFile(filestr))))
-              .then(async () => {
-                try {
-                  const files = up.getFiles().map(f => ({ id: f.id, hash: f.meta.hash, name: f.name}));
-                  const response = await axios.post('/api/cloud/preprocess', { files, outerFolderId  });
-                  const { alreadyUploaded, toUpload } = response.data;
+        return new Promise(async (resolve, reject) => {
+              try {
+                const files = await Promise.all(
+                  filesstr.map(async (fstr) => {
+                    const f = await up.getFile(fstr);
+                    return { id: f.id, hash: f.meta.hash, name: f.name };
+                  })
+                );
+                const response = await axios.post('/api/cloud/preprocess', { files, outerFolderId });
+                const { alreadyUploaded, toUpload } = response.data;
 
-                  alreadyUploaded.forEach(fileId => {
-                    up.removeFile(fileId);
-                  });
+                // console.log('Preprocessing response:');
+                // console.log(response.data);
 
-                  if(toUpload.length === 0) {
-                    up.info('All files have been uploaded!');
-                    router.replace(router.asPath);
-                    return;
-                  }
-                  
-                  resolve(toUpload);
-                } catch (error) {
-                  console.error('Error in preprocessing:', error);
-                  reject(error);
-                }
-              })
-              .catch(reject);
-          });
+                alreadyUploaded.forEach(fileId => {
+                  // console.log('File already uploaded, deleting:', fileId);
+                  up.removeFile(fileId);
+                });
+
+                toUpload.forEach(file => {
+                  // console.log('File not uploaded, proceeding:', file.id);
+                  up.setFileMeta(file.id, { gvnid: file.gvnid, hash: file.hash });
+                  // console.log('File meta:', up.getFile(file.id).meta);
+                })
+                
+                // resolve after one second to allow the UI to update
+                setTimeout(() => resolve(toUpload.map(f => f.id)), 1000);
+
+              } catch (error) {
+                console.error('Error in preprocessing:', error);
+                reject(error);
+              }
+
         });
+      });
 
-        up.on('complete', (result) => {
-          router.replace(router.asPath);
-        });
+      up.on('complete', () => {
+        router.replace(router.asPath);
+      });
 
-        setUppy(up);
+      setUppy(up);
 
-        return () => up.close();
-      }
+      return () => up.close();
     }
   }, [session, outerFolderId]);
 
   return (
     <>
       <MenuItem onClick={handleOpen}>Import File</MenuItem>
-      {!!uppy && (
+      {uppy && (
         <DashboardModal
           uppy={uppy}
           open={open}

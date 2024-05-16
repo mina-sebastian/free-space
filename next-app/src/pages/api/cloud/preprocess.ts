@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../../../libs/prismadb';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
+import { createId } from '@paralleldrive/cuid2';
 
 type ResponseData = {
   alreadyUploaded: string[];
@@ -21,24 +22,28 @@ export default async function handler(
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  console.log('Received preprocess request:', req.body);
+  // console.log('Received preprocess request:', req.body);
 
   const { files, outerFolderId } = req.body;
 
   if (!files || !Array.isArray(files)) {
     return res.status(400).json({ message: 'Bad Request' });
   }
-  const fileHashes = files.map(file => file.hash);
-  const existingFiles = await prisma.fileHash.findMany({
-    where: {
-      hash: { in: fileHashes }
-    },
-    select: {
-      hash: true,
-      path: true,
-      size: true
-    }
-  });
+  
+  const alreadyUploaded: string[] = [];
+  const toUpload: string[] = [];
+
+
+  // const existingFiles = await prisma.fileHash.findMany({
+  //   where: {
+  //     hash: { in: fileHashes }
+  //   },
+  //   select: {
+  //     hash: true,
+  //     path: true,
+  //     size: true
+  //   }
+  // });
 
   const folder = await prisma.folder.findFirst({
     where: {
@@ -54,13 +59,24 @@ export default async function handler(
     }
   });
 
-  const alreadyUploaded: string[] = [];
-  const toUpload: string[] = [];
-
+  
   for (const file of files) {
-    const existingFile = existingFiles.find(existingFile => existingFile.hash === file.hash);
-    if (existingFile) {
-      alreadyUploaded.push(file.id);
+    try{
+      const newAssignedId = `frspc-${createId()}`;
+      await prisma.fileHash.create({
+        data: {
+          hash: file.hash,
+          size: -1,
+          path: newAssignedId,
+        }
+      })
+      toUpload.push({
+        ...file,
+        gvnid: newAssignedId
+      })
+    }
+    catch(e){
+      // console.log(e);
       await prisma.file.create({
         data: {
           name: file.name,
@@ -69,8 +85,7 @@ export default async function handler(
           folderId: outerFolderId
         }
       });
-    } else {
-      toUpload.push(file.id);
+      alreadyUploaded.push(file.id);
     }
   }
 
