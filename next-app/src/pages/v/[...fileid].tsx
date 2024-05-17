@@ -1,33 +1,16 @@
 import * as React from 'react';
-import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
+import DocViewer, { BMPRenderer, CSVRenderer, DocRenderer, PDFRenderer, PNGRenderer, JPGRenderer, WebPRenderer, GIFRenderer, MSDocRenderer, TIFFRenderer, TXTRenderer,   } from "@cyntler/react-doc-viewer";
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../api/auth/[...nextauth]';
-import { useState } from 'react';
-
-
+import MyCustomVideoRenderer from '../../../components/renderer/CustomVideoRenderer';
+import MyCustomTextRenderer from '../../../components/renderer/CustomCodingREnderer';
 
 export default function FileViewer({ file }) {
-
-  const [docs, setDocs] = useState([]);
-
-  const handleFetchFile = async () => {
-    const fileUrl = `/api/file/${file.fileId}/get`;
-
-    const response = await fetch(fileUrl);
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-
-    setDocs([{ uri: url, fileType: file.name.split('.').pop(), fileName: file.name}]);
-  };
-
-  React.useEffect(() => {
-    handleFetchFile();
-  }, []);
-
   return (
     <DocViewer
-      documents={docs}
-      pluginRenderers={DocViewerRenderers}
+    
+      documents={[{ uri: `/api/file/${file.fileId}/get`, fileType: file.name.split('.').pop(), fileName: file.name}]}
+      pluginRenderers={[ TXTRenderer, TIFFRenderer, BMPRenderer, CSVRenderer, PDFRenderer, PNGRenderer, JPGRenderer, WebPRenderer, MyCustomVideoRenderer, GIFRenderer, MSDocRenderer, MyCustomTextRenderer ]}
     />
   );
 }

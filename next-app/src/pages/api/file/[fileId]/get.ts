@@ -5,6 +5,13 @@ import { authOptions } from '../../auth/[...nextauth]';
 import axios from 'axios';
 import { buffer } from 'stream/consumers';
 
+// make sure to set the response limit to false
+export const config = {
+  api: {
+    responseLimit: false,
+  },
+}
+
 type FileType = {
   fileId: string;
   name: string;
