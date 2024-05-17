@@ -1,5 +1,5 @@
 import React, { useRef, useReducer, useCallback, useState } from 'react';
-import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem } from '@mui/material';
+import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import FileCard from '../cards/FileCard';
 import LinkGenerationModal from '../modals/LinkGenerationModal';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -9,7 +9,7 @@ import axios from 'axios';
 
 interface FileMenuProps {
   folders: Array<{ folderId: string; name: string }>;
-  files: Array<{ fileId: string; name: string; hashFile: {size: number}}>;
+  files: Array<{ fileId: string; name: string; hashFile: { size: number } }>;
 }
 
 type State = {
@@ -73,6 +73,12 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedItem, setSelectedItem] = useState<{ itemId: string; itemType: 'folder' | 'file'; name: string } | null>(null);
 
+  const [sortCriteria, setSortCriteria] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
+
+  const [folderSortCriteria, setFolderSortCriteria] = useState('name');
+  const [folderSortOrder, setFolderSortOrder] = useState('asc');
+
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>, itemId: string, itemType: 'folder' | 'file', name: string) => {
     setAnchorEl(event.currentTarget);
     setSelectedItem({ itemId, itemType, name });
@@ -122,11 +128,43 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
     dispatch({ type: 'TOGGLE_ALL_FILES', checked: event.target.checked, fileIds: files.map(file => file.fileId) });
   }, [files]);
 
+  const handleSortCriteriaChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setSortCriteria(event.target.value as string);
+  };
+
+  const handleSortOrderChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setSortOrder(event.target.value as string);
+  };
+
+  const handleFolderSortCriteriaChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setFolderSortCriteria(event.target.value as string);
+  };
+
+  const handleFolderSortOrderChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setFolderSortOrder(event.target.value as string);
+  };
+
+  const sortedFiles = [...files].sort((a, b) => {
+    if (sortCriteria === 'name') {
+      return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+    } else if (sortCriteria === 'size') {
+      return sortOrder === 'asc' ? a.hashFile.size - b.hashFile.size : b.hashFile.size - a.hashFile.size;
+    }
+    return 0;
+  });
+
+  const sortedFolders = [...folders].sort((a, b) => {
+    if (folderSortCriteria === 'name') {
+      return folderSortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+    }
+    return 0;
+  });
+
   return (
     <div>
       <LinkGenerationModal ref={modalRef} />
       <h2>Folders</h2>
-      <Stack direction="row" alignItems="center">
+      <Stack direction="row" alignItems="center" spacing={2}>
         <FormControlLabel
           control={<Checkbox checked={state.selectAllFolders} onChange={handleSelectAllFolders} />}
           label="Select all"
@@ -141,9 +179,22 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
             </IconButton>
           </>
         )}
+        <FormControl variant="outlined" size="small">
+          <InputLabel>Sort By</InputLabel>
+          <Select value={folderSortCriteria} onChange={handleFolderSortCriteriaChange} label="Sort By">
+            <MenuItem value="name">Name</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl variant="outlined" size="small">
+          <InputLabel>Order</InputLabel>
+          <Select value={folderSortOrder} onChange={handleFolderSortOrderChange} label="Order">
+            <MenuItem value="asc">Ascending</MenuItem>
+            <MenuItem value="desc">Descending</MenuItem>
+          </Select>
+        </FormControl>
       </Stack>
       <List>
-        {folders.map((folder) => (
+        {sortedFolders.map((folder) => (
           <ListItem key={folder.folderId} disablePadding>
             <Checkbox
               sx={{ m: -1 }}
@@ -156,7 +207,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
       </List>
       <Divider />
       <h2>Files</h2>
-      <Stack direction="row" alignItems="center">
+      <Stack direction="row" alignItems="center" spacing={2}>
         <FormControlLabel
           control={<Checkbox checked={state.selectAllFiles} onChange={handleSelectAllFiles} />}
           label="Select all"
@@ -171,9 +222,23 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
             </IconButton>
           </>
         )}
+        <FormControl variant="outlined" size="small">
+          <InputLabel>Sort By</InputLabel>
+          <Select value={sortCriteria} onChange={handleSortCriteriaChange} label="Sort By">
+            <MenuItem value="name">Name</MenuItem>
+            <MenuItem value="size">Size</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl variant="outlined" size="small">
+          <InputLabel>Order</InputLabel>
+          <Select value={sortOrder} onChange={handleSortOrderChange} label="Order">
+            <MenuItem value="asc">Ascending</MenuItem>
+            <MenuItem value="desc">Descending</MenuItem>
+          </Select>
+        </FormControl>
       </Stack>
       <List>
-        {files.map((file) => (
+        {sortedFiles.map((file) => (
           <ListItem key={file.fileId}>
             <Checkbox
               sx={{ m: -1 }}
