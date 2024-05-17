@@ -19,7 +19,7 @@ export default async function handler(
   res: NextApiResponse<ResponseData | {message: string}>
 ) {
   const session = await getServerSession(req, res, authOptions);
-  if (!session) {
+  if (!session || !session.user) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
@@ -37,7 +37,7 @@ export default async function handler(
       user: user,
     },
   });
-  console.log(folders);
+  // console.log(folders);
   // Return the list of users
   if (folders.length > 0) {
     res.status(200).json({ folders });

@@ -10,13 +10,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../api/auth/[...nextauth]';
 import cuid2 from '@paralleldrive/cuid2';
 
-export default function FolderPath({fetchedDataInit}) {
+export default function FolderPath({ fetchedDataInit }) {
   const router = useRouter();
   const [fetchedData, setFetchedData] = React.useState<any>(fetchedDataInit);
   const [refetchId, setRefetchId] = React.useState("initial");
 
   const getFolderByPath = async (path: string) => {
-    try{
+    try {
       const response = await axios.post('/api/folder/getFolderByPath', { path });
       setFetchedData(response.data);
     } catch (error) {
@@ -62,7 +62,7 @@ export default function FolderPath({fetchedDataInit}) {
           ))}
         </Breadcrumbs>
       </div>
-      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []}  />
+      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} />
     </DefaultBg>
   );
 }
@@ -84,7 +84,12 @@ export async function getServerSideProps(context) {
   const { req, res } = context;
   const session = await getServerSession(req, res, authOptions);
   if (!session) {
-    return { error: 'Unauthorized', data: null };
+    return {
+      redirect: {
+        destination: '/login',
+        permanent: false,
+      },
+    };
   }
 
   const user = session.user;
@@ -92,45 +97,45 @@ export async function getServerSideProps(context) {
 
   const userDb = await prisma.user.findUnique({
     where: {
-        email: session.user.email
-      }
-    });
+      email: session.user.email,
+    },
+  });
 
   const homeFolder = await prisma.folder.findFirst({
     where: {
       userId: userDb.id,
       outerFolderId: null,
-      name: "Home"
-    }
+      name: "Home",
+    },
   });
 
   const binFolder = await prisma.folder.findFirst({
     where: {
       userId: userDb.id,
       outerFolderId: null,
-      name: "Bin"
-    }
+      name: "Bin",
+    },
   });
 
-  if(!homeFolder){
+  if (!homeFolder) {
     await prisma.folder.create({
       data: {
         name: "Home",
-        userId: userDb.id
-      }
+        userId: userDb.id,
+      },
     });
   }
 
-  if(!binFolder){
+  if (!binFolder) {
     await prisma.folder.create({
       data: {
         name: "Bin",
-        userId: userDb.id
-      }
+        userId: userDb.id,
+      },
     });
   }
-  
-const whereQuery = generateRecursiveOuterFolder([...path].reverse());
+
+  const whereQuery = generateRecursiveOuterFolder([...path].reverse());
 
   const folder = await prisma.folder.findFirst({
     select: {
@@ -141,42 +146,46 @@ const whereQuery = generateRecursiveOuterFolder([...path].reverse());
         select: {
           folderId: true,
           name: true,
-          outerFolderId: true
+          outerFolderId: true,
         },
       },
       files: {
         select: {
           fileId: true,
-          path: true,
+          hashFile: {
+            select: {
+              size: true,
+            },
+          },
           name: true,
-          size: true,
           user: {
             select: {
               image: true,
               name: true,
               email: true,
-            }
+            },
           },
-          folderId: true
-        }
-      }
+          folderId: true,
+        },
+      },
     },
     where: {
       userId: user.id,
-      ...whereQuery
+      ...whereQuery,
     },
   });
 
   if (!folder) {
-    return { props: { fetchedData: null }, notFound: true };
+    return { notFound: true };
   }
 
-  return { props: {
+  return {
+    props: {
       fetchedDataInit: {
         folders: folder.innerFolders,
         files: folder.files,
-        folderId: folder.folderId
-      }
-    }
+        folderId: folder.folderId,
+      },
+    },
   };
 }

@@ -19,8 +19,10 @@ type FileType = {
   };
   folderId: string;
   fileId: string;
+  hashFile: {
+      size: number;
+  };
   name: string;
-  size: Number;
   dimensiune: number;
 };
 
@@ -50,7 +52,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData | {message: string}>
 ) {
-  const session = await getServerSession(req, res, authOptions as any);
+  const session = await getServerSession(req, res, authOptions);
   if (!session) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
@@ -63,15 +65,16 @@ export default async function handler(
 
   let whereQuery = {};
 
-    if(typeof whereQuery === 'string'){
-        whereQuery = {
-                name: path,
-                outerFolderId: null
-        }
-    }else{
-        whereQuery = generateRecursiveOuterFolder(path.reverse());
-    }
-    console.log("query", whereQuery);
+  if (typeof path === 'string') {
+    whereQuery = {
+      name: path,
+      outerFolderId: null
+    };
+  } else {
+    const pathArray = Array.isArray(path) ? path : [path];
+    whereQuery = generateRecursiveOuterFolder(pathArray.reverse());
+  }
+  // console.log("query", whereQuery);
     const folder = await prisma.folder.findFirst({
       select: {
           folderId: true,
@@ -87,9 +90,12 @@ export default async function handler(
           files: {
             select: {
               fileId: true,
-              path: true,
+              hashFile:{
+                select:{
+                  size: true
+                }
+              },
               name: true,
-              size: true,
               user:{
                 select:{
                   image: true,
@@ -106,10 +112,20 @@ export default async function handler(
         ...whereQuery
       },
     });
-  console.log("FILES:",folder.files);
-  // Return the list of users
+  // console.log("FILES:", folder.files);
 
-  res.status(200).json({ folders: folder.innerFolders, files: folder.files, folderId: folder.folderId});
+  const updatedFiles = folder.files.map((file) => ({
+    ...file,
+    path: '', // Add the missing 'path' property
+    dimensiune: 0, // Add the missing 'dimensiune' property
+  }));
+
+  // Return the list of users
+  res.status(200).json({
+    folders: folder.innerFolders,
+    files: updatedFiles,
+    folderId: folder.folderId,
+  });
 
 
 }

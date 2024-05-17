@@ -29,11 +29,10 @@ export default async function handler(
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
-  console.log("session", session);
   const user = await session.user;
 
   const { folderId } = req.query // Extract folderId from request query parameters
-  console.log("folderId", folderId);
+  // console.log("folderId", folderId);
 
   let folderQuery = {};
 
@@ -51,7 +50,7 @@ export default async function handler(
   // Retrieve files directly associated with the specified folder
   const files = await prisma.file.findMany({
     where: {
-      folderId: folderId, // Filter files by the provided folderId
+      folderId: folderId as string, // Filter files by the provided folderId
     },
   });
 

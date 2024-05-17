@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../../../libs/prismadb';
 import { createId } from '@paralleldrive/cuid2';
+import { log } from 'console';
 
 // Type definitions for incoming hook requests
 type HookRequest = {
@@ -25,6 +26,7 @@ type HookResponse = {
       folderId: string;
       filename: string;
       creation_time: string;
+      hash: string;
     };
   };
   HTTPResponse?: {
@@ -52,6 +54,8 @@ export default async function (
       throw new Error('Method Not Allowed');
     }
 
+    // console.log('Received hook request:', req.body, req.body.Event.Upload.MetaData, req.body.Event.Upload.Storage);
+
     const hookRequest: HookRequest = req.body;
 
     switch (hookRequest.Type) {
@@ -61,13 +65,14 @@ export default async function (
       case 'post-finish':
         await handlePostFinish(hookRequest);
         break;
+      case 'post-terminate':
+        await handlePostDelete(hookRequest);
       default:
         hookResponse.RejectUpload = true;
         hookResponse.HTTPResponse.StatusCode = 200;
         return res.status(200).json(hookResponse);
     }
 
-    // console.log('Responding with hook response:', hookResponse);
     res.status(200).json(hookResponse);
   } catch (error) {
     console.error('Error processing hook:', error);
@@ -76,6 +81,34 @@ export default async function (
     hookResponse.HTTPResponse.Body = error.message;
     res.status(hookResponse.HTTPResponse.StatusCode).json(hookResponse);
   }
+}
+
+async function handlePostDelete(hookRequest: HookRequest) {
+  const { MetaData } = hookRequest.Event.Upload;
+
+  // console.log("DELETIING");
+  // console.log(hookRequest);
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: MetaData.tkn
+    },
+    select: {
+      id: true
+    }
+  });
+
+  if (!user) {
+    throw new Error('Not Authorized');
+  }
+
+  // console.log("DELETIING");
+  await prisma.fileHash.delete({
+    where: {
+      hash: MetaData.hash,
+    }
+  });
+  // console.log(rez);
 }
 
 /**
@@ -91,17 +124,38 @@ async function handlePreCreate(hookRequest: HookRequest, hookResponse: HookRespo
     }
   });
 
+
   if (!user) {
     throw new Error('Not Authorized');
   } else if (!isValid) {
     throw new Error('No filename provided');
   } else {
+    
+    const hashedFs = await prisma.fileHash.count({
+      where: {
+        hash: metaData.hash,
+        size:{
+          gt: -1
+        }
+      }
+    });
+    
+    if(hashedFs > 0){
+      hookResponse.RejectUpload = true;
+      hookResponse.HTTPResponse.StatusCode = 201;
+      hookResponse.HTTPResponse.Body = "File already in the system.";
+      return;
+    }
+
+    
+    
     hookResponse.ChangeFileInfo = {
-      ID: `frspc-${createId()}`,
+      ID: metaData.gvnid,
       MetaData: {
         tkn: metaData.tkn,
         folderId: metaData.folderId,
         filename: metaData.filename,
+        hash: metaData.hash,
         creation_time: new Date().toUTCString(),
       },
     };
@@ -113,13 +167,19 @@ async function handlePreCreate(hookRequest: HookRequest, hookResponse: HookRespo
  */
 async function handlePostFinish(hookRequest: HookRequest) {
   const { ID, Size, MetaData } = hookRequest.Event.Upload;
-  // console.log(`Upload ${ID} (${Size} bytes) is finished.`);
 
   const user = await prisma.user.findUnique({
     where: {
       id: MetaData.tkn
+    },
+    select: {
+      id: true
     }
   });
+
+  if (!user) {
+    throw new Error('Not Authorized');
+  }
 
   const folder = await prisma.folder.findFirst({
     where: {
@@ -130,18 +190,31 @@ async function handlePostFinish(hookRequest: HookRequest) {
     }
   }) || await prisma.folder.create({
     data: {
+      folderId: MetaData.folderId,
       name: "Home",
       userId: user.id,
     }
   });
 
-  await prisma.file.create({
+  if(!folder) {
+    throw new Error('Folder not found');
+  }
+
+  await prisma.fileHash.update({
+    where: {
+      hash: MetaData.hash,
+    },
     data: {
-      path: "http://localhost/files/" + ID,
-      name: MetaData.filename ,
       size: Size,
-      userId: user.id,
-      folderId: folder.folderId
     }
   });
+
+  await prisma.file.create({
+    data: {
+      userId: user.id,
+      folderId: folder.folderId,
+      name: MetaData.filename,
+      hash: MetaData.hash,
+      }
+    });
 }

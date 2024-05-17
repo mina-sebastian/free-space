@@ -1,12 +1,5 @@
 import * as React from 'react';
-import Backdrop from '@mui/material/Backdrop';
-import Box from '@mui/material/Box';
-import Modal from '@mui/material/Modal';
-import Fade from '@mui/material/Fade';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
+import { Backdrop, Box, Modal, Fade, Button, Typography, TextField, IconButton } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import BasicDropdown from '../dropdowns/BasicDropdown';
 import HorizontalRadioGroup from "../radio groups/HorizontalRadioGroup";
@@ -26,10 +19,10 @@ const style = {
   borderRadius: '16px'
 };
 
-const TransitionsModal = React.forwardRef( (props, ref) => {
-  console.log(ref);
+const TransitionsModal = React.forwardRef((props, ref) => {
   const accessOptions = ["Anyone with the link", "Only authenticated users"];
   const radioOptions = ["Read", "Write", "Read-Write"];
+
   const [type, setType] = React.useState("");
   const [id, setId] = React.useState("");
   const [name, setName] = React.useState("");
@@ -44,17 +37,13 @@ const TransitionsModal = React.forwardRef( (props, ref) => {
 
   React.useImperativeHandle(ref, () => ({
     open: (type, id, name) => {
-      handleOpen(type, id, name);
+      setType(type);
+      setId(id);
+      setName(name);
+      setOpen(true);
     }
   }));
 
-
-  const handleOpen = (type, id, name) => {
-    setType(type);
-    setId(id);
-    setName(name);
-    setOpen(true);
-  }
   const handleClose = () => {
     setOpen(false);
     setLink('');
@@ -67,7 +56,7 @@ const TransitionsModal = React.forwardRef( (props, ref) => {
   };
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPermission((event.target as HTMLInputElement).value);
+    setPermission(event.target.value);
   };
 
   const handleDropdownChange = (event: SelectChangeEvent) => {
@@ -78,38 +67,22 @@ const TransitionsModal = React.forwardRef( (props, ref) => {
     setLoading(true);
 
     try {
-
-      let permissions = "";
-
-      if(access === "Only authenticated users")
-        permissions += "authenticated ";
-      else
-        permissions += "all ";
-
-      if(permission === "Read")
-        permissions += "R";
-      else
-        if(permission === "Write")
-            permissions += "W";
-          else
-            permissions += "RW";
+      const permissions = `${access === "Only authenticated users" ? "authenticated " : "all "}${permission === "Read" ? "R" : permission === "Write" ? "W" : "RW"}`;
 
       const response = await axios.post('/api/link/generateLink', { type, id, permissions });
-      
+
       setLink(response.data.link);
       setSuccessMessage('Link generated successfully!');
-      setLoading(false);
       setError("");
-    } 
-    catch (error) {
-      console.error('Error generating link:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to generate link. Please try again.';
+    } catch (err) {
+      console.error('Error generating link:', err);
+      const errorMessage = err.response?.data?.message || 'Failed to generate link. Please try again.';
       setError(errorMessage);
+    } finally {
       setLoading(false);
     }
-    
   };
-  
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(link).then(
       () => {
@@ -120,81 +93,58 @@ const TransitionsModal = React.forwardRef( (props, ref) => {
         setCopySuccess('Failed to copy link.');
       }
     );
+
   };
 
   return (
-    <div>
-      {/* <Button onClick={handleOpen}>Open modal</Button> */}
-      <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        open={open}
-        onClose={handleClose}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
-      >
-        <Fade in={open}>
-          <Box sx={style}>
-
-            <Typography id="transition-modal-title" variant="h6" component="h2" sx={{ textAlign: 'center', fontSize: "1.5rem" }}>
-              Generate Link for {name}
-            </Typography>
-
-            <Typography id="transition-modal-description" sx={{ mt: 5, fontSize: '1.2rem' , mb: 3}}>
-              Who can see your {type} 
-            </Typography>
-
-            <BasicDropdown options={accessOptions} label="Access control" handleChange={handleDropdownChange} value={access}/>
-
-            <Typography id="transition-modal-description" sx={{ mt: 2, fontSize: '1.2rem', mb: 3}}>
-              Permissions
-            </Typography>
-
-            <HorizontalRadioGroup options={radioOptions} value={permission} handleRadioChange={handleRadioChange}/>
-
-            {error && (
-              <Typography color="error" sx={{display: 'block', mb: 2 }}>
-                {error}
-              </Typography>
+    <Modal
+      aria-labelledby="transition-modal-title"
+      aria-describedby="transition-modal-description"
+      open={open}
+      onClose={handleClose}
+      closeAfterTransition
+      BackdropComponent={Backdrop}
+      BackdropProps={{ timeout: 500 }}
+    >
+      <Fade in={open}>
+        <Box sx={style}>
+          <Typography id="transition-modal-title" variant="h6" component="h2" sx={{ textAlign: 'center', fontSize: "1.5rem" }}>
+            Generate Link for {name}
+          </Typography>
+          <Typography id="transition-modal-description" sx={{ mt: 5, fontSize: '1.2rem', mb: 3 }}>
+            Who can see your {type}
+          </Typography>
+          <BasicDropdown options={accessOptions} label="Access control" handleChange={handleDropdownChange} value={access} />
+          <Typography id="transition-modal-description" sx={{ mt: 2, fontSize: '1.2rem', mb: 3 }}>
+            Permissions
+          </Typography>
+          <HorizontalRadioGroup options={radioOptions} value={permission} handleRadioChange={handleRadioChange} />
+          {error && <Typography color="error" sx={{ display: 'block', mb: 2 }}>{error}</Typography>}
+          {successMessage && <Typography color="green" sx={{ display: 'block', mb: 2 }}>{successMessage}</Typography>}
+          {copySuccess && <Typography color="secondary" sx={{ display: 'block', mb: 2 }}>{copySuccess}</Typography>}
+          <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
+            {link ? (
+              <TextField
+                fullWidth
+                variant="outlined"
+                value={link}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton onClick={copyToClipboard}>
+                      <ContentCopyIcon />
+                    </IconButton>
+                  ),
+                }}
+              />
+            ) : (
+              <Button onClick={generateLink} disabled={loading}>
+                {loading ? 'Generating...' : 'Generate Link'}
+              </Button>
             )}
-            {successMessage && (
-              <Typography color="green" sx={{display: 'block', mb: 2 }}>
-                {successMessage}
-              </Typography>
-            )}
-            {copySuccess && (
-              <Typography color="secondary" sx={{display: 'block', mb: 2 }}>
-                {copySuccess}
-              </Typography>
-            )}
-
-            <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
-              {link ? (
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  value={link}
-                  InputProps={{
-                    endAdornment: (
-                      <IconButton onClick={copyToClipboard}>
-                        <ContentCopyIcon />
-                      </IconButton>
-                    ),
-                  }}
-                />
-              ) : (
-                <Button onClick={generateLink} disabled={loading}>
-                  {loading ? 'Generating...' : 'Generate Link'}
-                </Button>
-              )}
-            </Box>
           </Box>
-        </Fade>
-      </Modal>
-    </div>
+        </Box>
+      </Fade>
+    </Modal>
   );
 });
 

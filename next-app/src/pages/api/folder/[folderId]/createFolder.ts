@@ -2,10 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../../../../libs/prismadb';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]';
+import { Folder } from '@prisma/client';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<{ message: string }>
+  res: NextApiResponse<{ message: string, folder?: Folder }>
 ) {
   const session = await getServerSession(req, res, authOptions);
   if (!session) {
@@ -19,18 +20,12 @@ export default async function handler(
 
   console.log('userId', userId), console.log('folderId', folderId), console.log('name', newName);
   try {
-    // Create a new folder in the database
-    const newFolderData = {
-      name: newName,
-      userId: userId // Set userId for the folder
-    };
-
-    if (folderId !== '0') {
-      newFolderData.outerFolderId = folderId; // Set outerFolderId based on folderId if folderId is not '0'
-    }
-
     const newFolder = await prisma.folder.create({
-      data: newFolderData
+      data: {
+        name: newName,
+        userId: userId,
+        outerFolderId: folderId !== '0' ? folderId as string : null
+      }
     });
 
     res.status(200).json({ message: 'Folder created successfully', folder: newFolder });
