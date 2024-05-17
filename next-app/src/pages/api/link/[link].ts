@@ -24,9 +24,12 @@ export default async function handler(
         file: {
           select: {
             fileId: true,
-            path: true,
-            name: true, // Presupunând că "denumire" ar trebui să fie "name"
-            size: true, // "dimensiune" a fost redenumit în "size"
+            name: true,
+            hashFile: {
+              select: {
+                size: true
+              }
+            },
             folder: true,
           }
         },

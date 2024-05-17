@@ -3,6 +3,7 @@ import { randomBytes } from 'crypto';
 import prisma from "../../../../libs/prismadb";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
+import cuid2 from '@paralleldrive/cuid2';
 
 type ResponseData = {
   message: string,
@@ -27,7 +28,8 @@ export default async function generateLink(
     return res.status(400).json({ message: "Resource ID and type are required" });
   }
 
-  const accessKey = randomBytes(16).toString('hex');
+  
+  const accessKey = cuid2.createId()
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
 
   let link;

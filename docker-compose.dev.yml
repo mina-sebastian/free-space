@@ -52,6 +52,26 @@ services:
       - ./tusd/data:/srv/tusd-data/data
     networks:
       - frspc_network
+
+#####################################################################
+# microservices
+#####################################################################
+  microservices:
+    container_name: microservices
+    build:
+      context: ./microservices
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 5000:5000
+    volumes:
+      - ./tusd/data:/srv/tusd-data/data
+    networks:
+      - frspc_network
+    depends_on:
+    - tusd
+    - next-app
+
 #####################################################################
 # ollama
 #####################################################################

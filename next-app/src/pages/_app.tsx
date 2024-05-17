@@ -5,7 +5,9 @@ import { ThemeProvider, createTheme, responsiveFontSizes } from '@mui/material/s
 import { CssBaseline } from "@mui/material";
 
 import { Ubuntu } from "next/font/google";
+import { QueryClient, QueryClientProvider } from 'react-query';
 
+const queryClient = new QueryClient();
 
 const font = Ubuntu({
   weight: '500',
@@ -43,10 +45,12 @@ export default function MyApp({ Component, session, pageProps }: AppProps & { se
 
   return (
     <SessionProvider session={session}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline enableColorScheme />
-        <Component {...pageProps} />
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline enableColorScheme />
+          <Component {...pageProps} />
+        </ThemeProvider>
+      </QueryClientProvider>
     </SessionProvider>
   );
 }

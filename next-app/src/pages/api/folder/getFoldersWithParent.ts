@@ -43,7 +43,7 @@ export default async function handler(
       outerFolderId: parent //parent folder id
     },
   });
-  console.log(folders);
+  // console.log(folders);
   // Return the list of users
   if (folders.length > 0) {
     res.status(200).json({ folders });
