@@ -45,3 +45,4 @@ pwfile
 
 .env
 ollama/ollama/history
+tusd/data/*

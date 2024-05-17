@@ -4,12 +4,12 @@ import MenuItem from '@mui/material/MenuItem';
 import AddIcon from '@mui/icons-material/Add';
 import { Divider, ListItemButton, ListItemIcon, ListItemText, Box } from '@mui/material';
 import UploadFileButton from './UploadFileButton';
-import UploadFolderButton from './UploadFolderButton';
+import axios from 'axios'; // Import axios for making API calls
+import { useRouter } from 'next/router';
 
-export default function AsideNewButton() {
+export default function AsideNewButton({outerFolderId}) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -19,6 +19,22 @@ export default function AsideNewButton() {
     setAnchorEl(null);
   };
 
+  const router = useRouter();
+
+  const handleNewFolderClick = () => {
+    const newName = prompt(`Enter new folder name:`); 
+    // Make API call to create a new folder
+    axios.post(`/api/folder/${outerFolderId}/createFolder`, { newName })
+    .then(response => {
+      handleClose(); // Close the menu after successful creation
+      router.replace(router.asPath, undefined, { shallow: true });
+      // You can add further actions, such as updating the UI with the new folder
+    })
+    .catch(error => {
+      console.error('Error creating new folder:', error);
+      // Handle error cases if needed
+    });
+  };
 
   return (
     <>
@@ -50,10 +66,9 @@ export default function AsideNewButton() {
         }}
       >
         <Box sx={{ minWidth: 200 }}>
-          <MenuItem onClick={handleClose}>New Folder</MenuItem>
+          <MenuItem onClick={handleNewFolderClick}>New Folder</MenuItem> {/* Call handleNewFolderClick on click */}
           <Divider/>
-          <UploadFileButton onClose={handleClose} />
-          <UploadFolderButton onClose={handleClose}/>
+          <UploadFileButton onClose={handleClose} outerFolderId={outerFolderId} />
         </Box>
       </Menu>
     </>
