@@ -126,6 +126,4 @@ export default async function handler(
     files: updatedFiles,
     folderId: folder.folderId,
   });
-
-
 }

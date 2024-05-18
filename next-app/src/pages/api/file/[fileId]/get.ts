@@ -6,7 +6,7 @@ import axios from 'axios';
 import { buffer } from 'stream/consumers';
 
 type FileType = {
-  fileId: string;
+  fileId: string; 
   name: string;
   url: string;
 };
