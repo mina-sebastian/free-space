@@ -174,98 +174,101 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
     <div>
       <LinkGenerationModal ref={modalRef} />
       <SearchBar searchQuery={searchQuery} onSearchQueryChange={handleSearchQueryChange} />
-      
-      {searchQuery && (
-        <>
-          <h2>Folders</h2>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <FormControlLabel
-              control={<Checkbox checked={state.selectAllFolders} onChange={handleSelectAllFolders} />}
-              label="Select all"
+      {/* <TextField
+        label="Search"
+        variant="outlined"
+        size="small"
+        fullWidth
+        margin="normal"
+        value={searchQuery}
+        onChange={handleSearchQueryChange}
+      /> */}
+      <h2>Folders</h2>
+      <Stack direction="row" alignItems="center" spacing={2}>
+        <FormControlLabel
+          control={<Checkbox checked={state.selectAllFolders} onChange={handleSelectAllFolders} />}
+          label="Select all"
+        />
+        {state.checkedFolders.length > 0 && (
+          <>
+            <IconButton aria-label="delete">
+              <DeleteIcon />
+            </IconButton>
+            <IconButton aria-label="move">
+              <DriveFileMoveIcon />
+            </IconButton>
+          </>
+        )}
+        <FormControl variant="outlined" size="small">
+          <InputLabel>Sort By</InputLabel>
+          <Select value={folderSortCriteria} onChange={handleFolderSortCriteriaChange} label="Sort By">
+            <MenuItem value="name">Name</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl variant="outlined" size="small">
+          <InputLabel>Order</InputLabel>
+          <Select value={folderSortOrder} onChange={handleFolderSortOrderChange} label="Order">
+            <MenuItem value="asc">Ascending</MenuItem>
+            <MenuItem value="desc">Descending</MenuItem>
+          </Select>
+        </FormControl>
+      </Stack>
+      <List>
+        {sortedFolders.map((folder) => (
+          <ListItem key={folder.folderId} disablePadding>
+            <Checkbox
+              sx={{ m: -1 }}
+              checked={state.checkedFolders.includes(folder.folderId)}
+              onChange={() => dispatch({ type: 'TOGGLE_FOLDER', folderId: folder.folderId })}
             />
-            {state.checkedFolders.length > 0 && (
-              <>
-                <IconButton aria-label="delete">
-                  <DeleteIcon />
-                </IconButton>
-                <IconButton aria-label="move">
-                  <DriveFileMoveIcon />
-                </IconButton>
-              </>
-            )}
-            <FormControl variant="outlined" size="small">
-              <InputLabel>Sort By</InputLabel>
-              <Select value={folderSortCriteria} onChange={handleFolderSortCriteriaChange} label="Sort By">
-                <MenuItem value="name">Name</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl variant="outlined" size="small">
-              <InputLabel>Order</InputLabel>
-              <Select value={folderSortOrder} onChange={handleFolderSortOrderChange} label="Order">
-                <MenuItem value="asc">Ascending</MenuItem>
-                <MenuItem value="desc">Descending</MenuItem>
-              </Select>
-            </FormControl>
-          </Stack>
-          <List>
-            {sortedFolders.map((folder) => (
-              <ListItem key={folder.folderId} disablePadding>
-                <Checkbox
-                  sx={{ m: -1 }}
-                  checked={state.checkedFolders.includes(folder.folderId)}
-                  onChange={() => dispatch({ type: 'TOGGLE_FOLDER', folderId: folder.folderId })}
-                />
-                <FileCard itemId={folder.folderId} itemType="folder" name={folder.name} onShare={() => modalRef.current?.open()} onMenuClick={handleMenuClick} />
-              </ListItem>
-            ))}
-          </List>
-          <Divider />
-          <h2>Files</h2>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <FormControlLabel
-              control={<Checkbox checked={state.selectAllFiles} onChange={handleSelectAllFiles} />}
-              label="Select all"
+            <FileCard itemId={folder.folderId} itemType="folder" name={folder.name} onShare={() => modalRef.current?.open()} onMenuClick={handleMenuClick} />
+          </ListItem>
+        ))}
+      </List>
+      <Divider />
+      <h2>Files</h2>
+      <Stack direction="row" alignItems="center" spacing={2}>
+        <FormControlLabel
+          control={<Checkbox checked={state.selectAllFiles} onChange={handleSelectAllFiles} />}
+          label="Select all"
+        />
+        {state.checkedFiles.length > 0 && (
+          <>
+            <IconButton aria-label="delete">
+              <DeleteIcon />
+            </IconButton>
+            <IconButton aria-label="move">
+              <DriveFileMoveIcon />
+            </IconButton>
+          </>
+        )}
+        <FormControl variant="outlined" size="small">
+          <InputLabel>Sort By</InputLabel>
+          <Select value={sortCriteria} onChange={handleSortCriteriaChange} label="Sort By">
+            <MenuItem value="name">Name</MenuItem>
+            <MenuItem value="size">Size</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl variant="outlined" size="small">
+          <InputLabel>Order</InputLabel>
+          <Select value={sortOrder} onChange={handleSortOrderChange} label="Order">
+            <MenuItem value="asc">Ascending</MenuItem>
+            <MenuItem value="desc">Descending</MenuItem>
+          </Select>
+        </FormControl>
+      </Stack>
+      <List>
+        {sortedFiles.map((file) => (
+          <ListItem key={file.fileId}>
+            <Checkbox
+              sx={{ m: -1 }}
+              checked={state.checkedFiles.includes(file.fileId)}
+              onChange={() => dispatch({ type: 'TOGGLE_FILE', fileId: file.fileId })}
             />
-            {state.checkedFiles.length > 0 && (
-              <>
-                <IconButton aria-label="delete">
-                  <DeleteIcon />
-                </IconButton>
-                <IconButton aria-label="move">
-                  <DriveFileMoveIcon />
-                </IconButton>
-              </>
-            )}
-            <FormControl variant="outlined" size="small">
-              <InputLabel>Sort By</InputLabel>
-              <Select value={sortCriteria} onChange={handleSortCriteriaChange} label="Sort By">
-                <MenuItem value="name">Name</MenuItem>
-                <MenuItem value="size">Size</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl variant="outlined" size="small">
-              <InputLabel>Order</InputLabel>
-              <Select value={sortOrder} onChange={handleSortOrderChange} label="Order">
-                <MenuItem value="asc">Ascending</MenuItem>
-                <MenuItem value="desc">Descending</MenuItem>
-              </Select>
-            </FormControl>
-          </Stack>
-          <List>
-            {sortedFiles.map((file) => (
-              <ListItem key={file.fileId}>
-                <Checkbox
-                  sx={{ m: -1 }}
-                  checked={state.checkedFiles.includes(file.fileId)}
-                  onChange={() => dispatch({ type: 'TOGGLE_FILE', fileId: file.fileId })}
-                />
-                <FileCard itemId={file.fileId} itemType="file" name={file.name} link={`/v/${file.fileId}`} onShare={() => modalRef.current?.open()} onMenuClick={handleMenuClick} />
-              </ListItem>
-            ))}
-          </List>
-        </>
-      )}
-
+            <FileCard itemId={file.fileId} itemType="file" name={file.name} link={`/v/${file.fileId}`} onShare={() => modalRef.current?.open()} onMenuClick={handleMenuClick} />
+          </ListItem>
+        ))}
+      </List>
       <Menu id="menu" anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
         {router.asPath.startsWith('/f/Home') && <MenuItem onClick={handleRenameItem}>Rename</MenuItem>}
         <MenuItem onClick={handleDeleteItem}>Delete</MenuItem>
