@@ -1,11 +1,12 @@
 import React, { useRef, useReducer, useCallback, useState } from 'react';
-import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem, Select, FormControl, InputLabel, TextField } from '@mui/material';
 import FileCard from '../cards/FileCard';
 import LinkGenerationModal from '../modals/LinkGenerationModal';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
 import { useRouter } from 'next/router';
 import axios from 'axios';
+import SearchBar from './SearchBar';
 
 interface FileMenuProps {
   folders: Array<{ folderId: string; name: string }>;
@@ -79,6 +80,8 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
   const [folderSortCriteria, setFolderSortCriteria] = useState('name');
   const [folderSortOrder, setFolderSortOrder] = useState('asc');
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>, itemId: string, itemType: 'folder' | 'file', name: string) => {
     setAnchorEl(event.currentTarget);
     setSelectedItem({ itemId, itemType, name });
@@ -144,7 +147,14 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
     setFolderSortOrder(event.target.value as string);
   };
 
-  const sortedFiles = [...files].sort((a, b) => {
+  const handleSearchQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  };
+
+  const filteredFiles = files.filter(file => file.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredFolders = folders.filter(folder => folder.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const sortedFiles = [...filteredFiles].sort((a, b) => {
     if (sortCriteria === 'name') {
       return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
     } else if (sortCriteria === 'size') {
@@ -153,7 +163,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
     return 0;
   });
 
-  const sortedFolders = [...folders].sort((a, b) => {
+  const sortedFolders = [...filteredFolders].sort((a, b) => {
     if (folderSortCriteria === 'name') {
       return folderSortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
     }
@@ -163,6 +173,16 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
   return (
     <div>
       <LinkGenerationModal ref={modalRef} />
+      <SearchBar searchQuery={searchQuery} onSearchQueryChange={handleSearchQueryChange} />
+      {/* <TextField
+        label="Search"
+        variant="outlined"
+        size="small"
+        fullWidth
+        margin="normal"
+        value={searchQuery}
+        onChange={handleSearchQueryChange}
+      /> */}
       <h2>Folders</h2>
       <Stack direction="row" alignItems="center" spacing={2}>
         <FormControlLabel
