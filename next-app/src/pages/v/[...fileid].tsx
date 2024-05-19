@@ -47,11 +47,26 @@ export async function getServerSideProps(context) {
 
   const fileid = context.query.fileid[0];
 
-  const file = await prisma.file.findUnique({
+  let file = await prisma.file.findUnique({
     where: {
       fileId: fileid,
     },
   });
+
+  if(!file){
+    const link_file = await prisma.link.findUnique({
+      where: { path: fileid },
+      select:{
+        file: {
+          include: {
+            hashFile: true
+          }
+        }
+      }
+    });
+    if(link_file && link_file.file)
+      file = link_file.file;
+  }
 
   if (!file) {
     return {

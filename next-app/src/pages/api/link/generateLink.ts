@@ -21,11 +21,11 @@ export default async function generateLink(
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const {type, permissions } = req.body;
+  const {type, permissions, canSee } = req.body;
   const id = req.body.id;
 
-  if (!id || !type) {
-    return res.status(400).json({ message: "Resource ID and type are required" });
+  if (!id || !type || !permissions || !canSee) {
+    return res.status(400).json({ message: "Resource ID, type, permission and canSee are required" });
   }
 
   
@@ -45,8 +45,11 @@ export default async function generateLink(
       }
 
       link = await prisma.link.create({
-        data: { path: accessKey, expires: expiresAt, permission: permissions, fileId: id }
+        data: { path: accessKey, expires: expiresAt, permission: permissions, canSee: canSee, fileId: id }
       });
+      const baseUrl = 'http://localhost/v'; // Adjust this as necessary
+      return res.status(200).json({ message: "Link generated successfully", link: `${baseUrl}/${accessKey}` });
+  
     } else if (type === 'folder') {
       const folder = await prisma.folder.findUnique({
         where: { folderId: id, user:{email: session.user.email} }
@@ -57,14 +60,16 @@ export default async function generateLink(
       }
 
       link = await prisma.link.create({
-        data: { path: accessKey, expires: expiresAt, permission: permissions, folderId: id }
+        data: { path: accessKey, expires: expiresAt, permission: permissions, canSee: canSee, folderId: id }
       });
+
+      const baseUrl = 'http://localhost/l'; // Adjust this as necessary
+      return res.status(200).json({ message: "Link generated successfully", link: `${baseUrl}/${accessKey}` });
+  
     } else {
       return res.status(400).json({ message: "Invalid resource type" });
     }
 
-    const baseUrl = 'http://localhost/api/link'; // Adjust this as necessary
-    return res.status(200).json({ message: "Link generated successfully", link: `${baseUrl}/${accessKey}` });
 
   } catch (error) {
     console.log(req.body);

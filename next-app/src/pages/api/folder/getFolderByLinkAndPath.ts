@@ -33,19 +33,18 @@ type ResponseData = {
 };
 
 //generate a recursive folder where name = path[i]
-const generateRecursiveOuterFolder = (paths: string[]) => {
-    if(paths.length <= 1){
-        return {
-            name: paths[0],
-            outerFolder: null
-        };
-    }
-
+const generateRecursiveOuterFolder = (paths, sharedFolderId) => {
+  if (paths.length <= 1) {
     return {
-        name: paths[0],
-        outerFolder: generateRecursiveOuterFolder(paths.slice(1))
-    }
-}
+      name: paths[0],
+      outerFolderId: sharedFolderId
+    };
+  }
+  return {
+    name: paths[0],
+    outerFolder: generateRecursiveOuterFolder(paths.slice(1), sharedFolderId)
+  };
+};
 
 export default async function handler(
     req: NextApiRequest, 
@@ -55,77 +54,97 @@ export default async function handler(
     if (!session) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-  
-    const user = await session.user;
     
     // Extract linkId and path from the query
-    const { combinedPath }: { combinedPath: string } = req.query as {combinedPath: string};
-    const [linkId, ...pathParts] = combinedPath.split('/'); // sa am grija la cazul in care am doar linkId si nu path
+    const { pathLink }: { pathLink: string } = req.body;
 
-    console.log("LINKID: " + linkId + ", PATHPARTS: " + pathParts);
+    const initPath = pathLink.split('/');
 
-    const path = pathParts.join('/'); // Recombine the remaining parts back into a full path
-  
-    let whereQuery = {};
-  
-    if (path) {
-      if (path.includes('/')) {
-        // If path is hierarchical, resolve it using a recursive function
-        const pathArray = path.split('/').reverse(); // Split and reverse for recursive function compatibility
-        whereQuery = generateRecursiveOuterFolder(pathArray);
-      } else {
-        // Simple case, path is a single folder name
-        whereQuery = {
-          name: path,
-          outerFolderId: null
-        };
-      }
-    }
-  
-    // Include condition to fetch folders based on linkId
-    const folder = await prisma.folder.findFirst({
-      select: {
-          folderId: true,
-          name: true, 
-          outerFolderId: true,
-          innerFolders: {
+    const linkId = initPath[0];
+    const path = initPath.slice(1);
+
+    // console.log("LINKID: " + linkId + ", PATH: " + initPath);
+
+    
+  const link = await prisma.link.findUnique({
+    where: {
+      path: linkId,
+    },
+    select: {
+      folderId: true,
+      fileId: true,
+      file: {
+        select: {
+          fileId: true,
+          hashFile: {
             select: {
-              folderId: true,
-              name: true,
-              outerFolderId: true
+              size: true,
             },
           },
-          files: {
-            select: {
-              fileId: true,
-              hashFile:{
-                select:{
-                  size: true
-                }
-              },
-              name: true,
-              user:{
-                select:{
-                  image: true,
-                  name: true,
-                  email: true,
-                }
-              },
-              folderId: true
-            }
-          }
+          name: true,
+        },
       },
-      where: {
-        user: user,
-        ...whereQuery,
-        links: {
-          some: {
-            path: linkId
-          }
+      folder: {
+        select: {
+          userId: true,
         }
+      }
+    },
+  });
+
+
+  if(!link || !link.folderId){
+    return res.status(404).json({ message: "Link not found" });
+  }
+
+  let whereQuery = {};
+  // console.log(path)
+  if(!path || path.length === 0){
+    whereQuery = {
+      folderId: link.folderId
+    };
+  }else{
+    whereQuery = generateRecursiveOuterFolder([...path].reverse(), link.folderId);
+  }
+    
+  const folder = await prisma.folder.findFirst({
+    select: {
+      folderId: true,
+      name: true,
+      outerFolderId: true,
+      innerFolders: {
+        select: {
+          folderId: true,
+          name: true,
+          outerFolderId: true,
+        },
       },
-    });
-  
+      files: {
+        select: {
+          fileId: true,
+          hashFile: {
+            select: {
+              size: true,
+            },
+          },
+          name: true,
+          user: {
+            select: {
+              image: true,
+              name: true,
+              email: true,
+            },
+          },
+          folderId: true,
+        },
+      },
+    },
+    where: {
+      // userId: user.id,
+      ...whereQuery,
+    },
+  });
+
 
 
     // Assume we handle 'folder' being possibly null (not found)

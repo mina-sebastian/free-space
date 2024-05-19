@@ -87,12 +87,13 @@ model FileHash {
 }
 
 model Link {
-  path         String   @id
+  path         String     @id
   expires      DateTime?
-  permission   String
-  file         File?     @relation(fields: [fileId], references: [fileId])
+  permission   Permission
+  canSee       CanSee
+  file         File?      @relation(fields: [fileId], references: [fileId], onDelete: Cascade)
   fileId       String?
-  folder       Folder?   @relation(fields: [folderId], references: [folderId])
+  folder       Folder?    @relation(fields: [folderId], references: [folderId], onDelete: Cascade)
   folderId     String?
 }
 
@@ -100,4 +101,14 @@ model Tag {
   tagId   String   @id @default(cuid())
   name    String
   fileHashes   FileHash[]
+}
+
+enum CanSee {
+  ALL
+  AUTH
+}
+
+enum Permission {
+  VIEW
+  EDIT
 }

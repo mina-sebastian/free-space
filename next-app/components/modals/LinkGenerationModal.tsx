@@ -21,7 +21,7 @@ const style = {
 
 const TransitionsModal = React.forwardRef((props, ref) => {
   const accessOptions = ["Anyone with the link", "Only authenticated users"];
-  const radioOptions = ["Read", "Write", "Read-Write"];
+  const radioOptions = ["View", "Edit"];
 
   const [type, setType] = React.useState("");
   const [id, setId] = React.useState("");
@@ -67,9 +67,9 @@ const TransitionsModal = React.forwardRef((props, ref) => {
     setLoading(true);
 
     try {
-      const permissions = `${access === "Only authenticated users" ? "authenticated " : "all "}${permission === "Read" ? "R" : permission === "Write" ? "W" : "RW"}`;
-
-      const response = await axios.post('/api/link/generateLink', { type, id, permissions });
+      const permissions = permission === "View" ? "VIEW" : "EDIT";
+      const canSee = access === "Only authenticated users" ? "AUTH" : "ALL";
+      const response = await axios.post('/api/link/generateLink', { type, id, permissions, canSee });
 
       setLink(response.data.link);
       setSuccessMessage('Link generated successfully!');
