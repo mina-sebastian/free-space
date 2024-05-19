@@ -1,6 +1,5 @@
 import * as React from 'react';
 import DefaultBg from "../../components/DefaultBg";
-import FileMenu from "../../components/main/FileMenu";
 import axios from 'axios';
 import { useSession } from "next-auth/react";
 import { useRouter } from 'next/router';
@@ -11,6 +10,7 @@ import { authOptions } from './api/auth/[...nextauth]';
 import cuid2 from '@paralleldrive/cuid2';
 import WelcomeBg from '../../components/WelcomeBg';
 import { Typography } from '@mui/material';
+import IndexFileMenu from '../../components/main/IndexFileMenu';
 
 export default function FolderPath({ fetchedDataInit }) {
   const router = useRouter();
@@ -38,7 +38,7 @@ export default function FolderPath({ fetchedDataInit }) {
             free-space is a local cloud storage service that allows you to store your files on your server!
           </Typography>      
       </WelcomeBg>
-      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} />
+      <IndexFileMenu files={fetchedData?.files || []} />
     </DefaultBg>
   );
 }
@@ -95,17 +95,6 @@ export async function getServerSideProps(context) {
     });
   }
 
-  // Fetch all folders and files for the user
-  const folders = await prisma.folder.findMany({
-    where: {
-      userId: userDb.id,
-    },
-    select: {
-      folderId: true,
-      name: true,
-      outerFolderId: true,
-    },
-  });
 
   const files = await prisma.file.findMany({
     where: {
@@ -133,7 +122,6 @@ export async function getServerSideProps(context) {
   return {
     props: {
       fetchedDataInit: {
-        folders: folders,
         files: files,
       },
     },
