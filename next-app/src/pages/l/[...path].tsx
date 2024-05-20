@@ -16,10 +16,12 @@ export default function FolderPath({ fetchedDataInit }) {
   const [fetchedData, setFetchedData] = React.useState<any>(fetchedDataInit);
   const [refetchId, setRefetchId] = React.useState("initial");
 
+  console.log("can edit din path: " + fetchedData.canEdit);
+
   const getFolderByPath = async (pathLink: string) => {
     try {
       const response = await axios.post('/api/folder/getFolderByLinkAndPath', { pathLink });
-      setFetchedData(response.data);
+      setFetchedData(prevData => ({ ...prevData, ...response.data }));
     } catch (error) {
       console.error('Error getting folder by path:', error);
     }
@@ -64,7 +66,7 @@ export default function FolderPath({ fetchedDataInit }) {
           ))}
         </Breadcrumbs>
       </div>
-      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} />
+      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} canEdit={fetchedData.canEdit} />
     </DefaultBg>
   );
 }
@@ -85,25 +87,10 @@ const generateRecursiveOuterFolder = (paths, sharedFolderId) => {
 export async function getServerSideProps(context) {
   const { req, res } = context;
   const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
-    };
-  }
-
-  const user = session.user;
+  
   const initPath: string[] = context.query.path;
-
-  // console.log("Path: ");
-  // console.log(initPath);
-
   const linkId = initPath[0];
-  const path = initPath.slice(1);
 
-  // console.log("Link ID: " + linkId);
 
   const link = await prisma.link.findUnique({
     where: {
@@ -112,6 +99,8 @@ export async function getServerSideProps(context) {
     select: {
       folderId: true,
       fileId: true,
+      permission: true,  // Include permission in the query,
+      canSee: true,
       file: {
         select: {
           fileId: true,
@@ -135,6 +124,28 @@ export async function getServerSideProps(context) {
     return { notFound: true };
   }
   
+  if (!session && link.canSee == "AUTH") {
+    return {
+      redirect: {
+        destination: '/Home',
+        permanent: false,
+      },
+    };
+  }
+
+  const user = session != null? session.user : undefined;
+  
+
+  // console.log("Path: ");
+  // console.log(initPath);
+
+  
+  const path = initPath.slice(1);
+
+  // console.log("Link ID: " + linkId);
+
+ 
+
   let whereQuery = {};
   // console.log(path)
   if(!path || path.length === 0){
@@ -153,6 +164,7 @@ export async function getServerSideProps(context) {
       folderId: true,
       name: true,
       outerFolderId: true,
+      userId: true,  // Includem userId pentru a verifica proprietatea
       innerFolders: {
         select: {
           folderId: true,
@@ -163,6 +175,7 @@ export async function getServerSideProps(context) {
       files: {
         select: {
           fileId: true,
+          userId: true,  // Includem și aici userId
           hashFile: {
             select: {
               size: true,
@@ -181,7 +194,6 @@ export async function getServerSideProps(context) {
       },
     },
     where: {
-      // userId: user.id,
       ...whereQuery,
     },
   });
@@ -193,12 +205,16 @@ export async function getServerSideProps(context) {
     return { notFound: true };
   }
 
+  const isOwner = user != undefined? folder.userId === user.id : false;
+  const canEdit = (link.permission === "EDIT" && session != null) || isOwner;
+
   return {
     props: {
       fetchedDataInit: {
         folders: folder.innerFolders,
         files: folder.files,
         folderId: folder.folderId,
+        canEdit: canEdit
       },
     },
   };

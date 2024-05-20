@@ -7,10 +7,12 @@ import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import SearchBar from './SearchBar';
+import { Candal } from 'next/font/google';
 
 interface FileMenuProps {
   folders: Array<{ folderId: string; name: string }>;
   files: Array<{ fileId: string; name: string; hashFile: { size: number } }>;
+  canEdit: boolean
 }
 
 type State = {
@@ -66,11 +68,13 @@ const reducer = (state: State, action: Action): State => {
   }
 };
 
-const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
+const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit }) => {
   const modalRef = useRef(null);
   const [state, dispatch] = useReducer(reducer, initialState);
   const router = useRouter();
   
+console.log("Can edit: " + canEdit);
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedItem, setSelectedItem] = useState<{ itemId: string; itemType: 'folder' | 'file'; name: string } | null>(null);
 
@@ -269,11 +273,14 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
           </ListItem>
         ))}
       </List>
-      <Menu id="menu" anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-        {router.asPath.startsWith('/f/Home') && <MenuItem onClick={handleRenameItem}>Rename</MenuItem>}
-        <MenuItem onClick={handleDeleteItem}>Delete</MenuItem>
+
+      
+      {canEdit != false && <Menu id="menu" anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+        {(router.asPath.startsWith('/f/Home') || canEdit == true ) && <MenuItem onClick={handleRenameItem}>Rename</MenuItem>}
+        {<MenuItem onClick={handleDeleteItem}>Delete</MenuItem>}
         {router.asPath.startsWith('/f/Home') && <MenuItem onClick={() => selectedItem && modalRef.current?.open(selectedItem.itemType, selectedItem.itemId, selectedItem.name)}>Share</MenuItem>}
-      </Menu>
+      </Menu> }
+      
     </div>
   );
 };
