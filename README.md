@@ -37,3 +37,4 @@ To test the file upload functionality go to `http://localhost/test`
 ## In case of major changes
 1. Make sure that you are in root(free-space) directory
 2. Run `docker compose -f docker-compose.dev.yml up --build`
+

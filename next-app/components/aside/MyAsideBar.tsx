@@ -23,6 +23,7 @@ export default function MyAsideBar({ currentlyOpen, open, setOpen, folderId, ref
     setOpen(false);
   };
 
+  
   const router = useRouter();
 
   return (

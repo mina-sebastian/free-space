@@ -2,6 +2,13 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../../../../libs/prismadb';
 import axios from 'axios';
 
+// make sure to set the response limit to false
+export const config = {
+  api: {
+    responseLimit: false,
+  },
+}
+
 type FileType = {
   fileId: string; 
   name: string;
