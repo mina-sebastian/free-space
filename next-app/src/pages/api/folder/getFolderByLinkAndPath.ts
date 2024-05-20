@@ -51,9 +51,6 @@ export default async function handler(
     res: NextApiResponse<ResponseData | {message: string}>
   ) {
     const session = await getServerSession(req, res, authOptions);
-    if (!session) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
     
     // Extract linkId and path from the query
     const { pathLink }: { pathLink: string } = req.body;
@@ -73,6 +70,7 @@ export default async function handler(
     select: {
       folderId: true,
       fileId: true,
+      canSee: true,
       file: {
         select: {
           fileId: true,
@@ -91,6 +89,10 @@ export default async function handler(
       }
     },
   });
+
+  if(link.canSee == "AUTH" && !session){
+    return res.status(403).json({ message: "Unauthorized" });
+  }
 
 
   if(!link || !link.folderId){
@@ -140,7 +142,6 @@ export default async function handler(
       },
     },
     where: {
-      // userId: user.id,
       ...whereQuery,
     },
   });

@@ -15,16 +15,44 @@ export default function FileViewer({ file }) {
   );
 }
 
+const isInFolder = async (folderId, sharedFolderId) => {
+  if(folderId == sharedFolderId)
+    return true;
+  const folder = await prisma.folder.findUnique({
+    where: {
+      folderId: folderId
+    },
+    select: {
+      outerFolderId: true
+    }
+  });
+  if(folder.outerFolderId == null)
+    return false;
+
+  return isInFolder(folder.outerFolderId, sharedFolderId);
+}
+
 export async function getServerSideProps(context) {
   const { req, res } = context;
   const session = await getServerSession(req, res, authOptions);
 
-  if (!session) {
+  const query = context.query.q;
+
+  console.log(query);
+
+  const link_quest = await prisma.link.findUnique({
+    where: {
+      path: query,
+    },
+    select: {
+      canSee: true,
+      folderId: true
+    }
+  });
+
+  if ((!link_quest || link_quest.canSee != "ALL") && !session) {
     return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
+      notFound: true,
     };
   }
 
@@ -34,7 +62,22 @@ export async function getServerSideProps(context) {
     where: {
       fileId: fileid,
     },
+    select: {
+      userId: true,
+      folderId: true,
+      name: true,
+      fileId: true
+    }
   });
+
+  if(!!file && (!session || (file.userId != session.user.id))){
+    //verify recursively if the file is in a folder that the user has access
+    if(!isInFolder(file.folderId, link_quest.folderId)){
+      return {
+        notFound: true,
+      };
+    }
+  }
 
   if(!file){
     const link_file = await prisma.link.findUnique({
@@ -56,6 +99,9 @@ export async function getServerSideProps(context) {
       notFound: true,
     };
   }
+
+  console.log(file);
+  console.log("TOTO BENE");
 
   return {
     props: {

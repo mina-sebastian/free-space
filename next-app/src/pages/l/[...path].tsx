@@ -61,12 +61,12 @@ export default function FolderPath({ fetchedDataInit }) {
               }}
               aria-current={index === breadcrumbItems.length - 1 ? "page" : undefined}
             >
-              {item}
+              {index == 0 ? fetchedDataInit.folderName : item}
             </Link>
           ))}
         </Breadcrumbs>
       </div>
-      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} canEdit={fetchedData.canEdit} />
+      <FileMenu linkId={fetchedDataInit.linkId} folders={fetchedData?.folders || []} files={fetchedData?.files || []} canEdit={fetchedDataInit.canEdit} />
     </DefaultBg>
   );
 }
@@ -115,6 +115,7 @@ export async function getServerSideProps(context) {
       folder: {
         select: {
           userId: true,
+          name: true,
         }
       }
     },
@@ -205,8 +206,10 @@ export async function getServerSideProps(context) {
     return { notFound: true };
   }
 
-  const isOwner = user != undefined? folder.userId === user.id : false;
-  const canEdit = (link.permission === "EDIT" && session != null) || isOwner;
+  const isOwner = user != undefined ? folder.userId === user.id : false;
+  const canEdit = (link.permission === "EDIT") || isOwner;
+
+  console.log("Can edit: " + canEdit);
 
   return {
     props: {
@@ -214,7 +217,9 @@ export async function getServerSideProps(context) {
         folders: folder.innerFolders,
         files: folder.files,
         folderId: folder.folderId,
-        canEdit: canEdit
+        folderName: link.folder.name,
+        canEdit: canEdit,
+        linkId: linkId,
       },
     },
   };

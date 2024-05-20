@@ -62,7 +62,7 @@ export default function FolderPath({ fetchedDataInit }) {
           ))}
         </Breadcrumbs>
       </div>
-      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} />
+      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} canEdit={true}/>
     </DefaultBg>
   );
 }
