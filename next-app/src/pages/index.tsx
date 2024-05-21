@@ -12,10 +12,12 @@ import WelcomeBg from '../../components/WelcomeBg';
 import { Typography } from '@mui/material';
 import IndexFileMenu from '../../components/main/IndexFileMenu';
 
+
 export default function FolderPath({ fetchedDataInit }) {
   const router = useRouter();
   const [fetchedData, setFetchedData] = React.useState<any>(fetchedDataInit);
   const [refetchId, setRefetchId] = React.useState("initial");
+  const { data: session } = useSession();
 
   const getAllUserFilesAndFolders = async () => {
     try {
@@ -36,8 +38,10 @@ export default function FolderPath({ fetchedDataInit }) {
       <WelcomeBg>
           <Typography variant="h4" align="center">
             free-space is a local cloud storage service that allows you to store your files on your server!
-          </Typography>      
-          <IndexFileMenu files={fetchedData?.files || []} />
+          </Typography>
+          {session && (
+            <IndexFileMenu files={fetchedData?.files || []} />
+          )}
       </WelcomeBg>
 
     </DefaultBg>

@@ -9,7 +9,6 @@ import axios from 'axios';
 import SearchBar from './SearchBar';
 
 interface FileMenuProps {
-  folders: Array<{ folderId: string; name: string }>;
   files: Array<{ fileId: string; name: string; hashFile: { size: number } }>;
 }
 
@@ -210,7 +209,7 @@ const FileMenu: React.FC<FileMenuProps> = ({files }) => {
                   checked={state.checkedFiles.includes(file.fileId)}
                   onChange={() => dispatch({ type: 'TOGGLE_FILE', fileId: file.fileId })}
                 />
-                <FileCard itemId={file.fileId} itemType="file" name={file.name} link={`/v/${file.fileId}`} onShare={() => modalRef.current?.open()} onMenuClick={handleMenuClick} />
+                <FileCard itemId={file.fileId} itemType="file" name={file.name} link={`/v/${file.fileId}`} onShare={() => modalRef.current?.open()} onMenuClick={handleMenuClick}/>
               </ListItem>
             ))}
           </List>
