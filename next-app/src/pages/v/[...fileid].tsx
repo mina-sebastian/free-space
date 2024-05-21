@@ -3,7 +3,7 @@ import DocViewer, { BMPRenderer, CSVRenderer, DocRenderer, PDFRenderer, PNGRende
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../api/auth/[...nextauth]';
 import MyCustomVideoRenderer from '../../../components/renderer/CustomVideoRenderer';
-import MyCustomTextRenderer from '../../../components/renderer/CustomCodingREnderer';
+import MyCustomTextRenderer from '../../../components/renderer/CustomCodingRenderer';
 
 export default function FileViewer({ file }) {
   return (
@@ -42,7 +42,7 @@ export async function getServerSideProps(context) {
 
   const link_quest = await prisma.link.findUnique({
     where: {
-      path: query,
+      path: !!query ? query : "UNKNOWN_PATH",
     },
     select: {
       canSee: true,
@@ -99,9 +99,6 @@ export async function getServerSideProps(context) {
       notFound: true,
     };
   }
-
-  console.log(file);
-  console.log("TOTO BENE");
 
   return {
     props: {
