@@ -7,6 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import FolderListButtons from './FolderListButtons';
 import { useRouter } from 'next/router';
+import StorageUsage from './StorageUsage';
 
 const drawerWidth = 240;
 
@@ -56,13 +57,8 @@ export default function MyAsideBar({ currentlyOpen, open, setOpen, folderId, ref
           <ListItem>
             <FolderListButtons currentlyOpen={currentlyOpen} refetchId={refetchId} />
           </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton>
-              <ListItemIcon>
-                <CloudIcon />
-              </ListItemIcon>
-              <ListItemText primary="Storage" />
-            </ListItemButton>
+          <ListItem>
+            <StorageUsage />
           </ListItem>
         </List>
       </Box>
