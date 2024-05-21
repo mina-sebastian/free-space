@@ -37,8 +37,9 @@ export default function FolderPath({ fetchedDataInit }) {
           <Typography variant="h4" align="center">
             free-space is a local cloud storage service that allows you to store your files on your server!
           </Typography>      
+          <IndexFileMenu files={fetchedData?.files || []} />
       </WelcomeBg>
-      <IndexFileMenu files={fetchedData?.files || []} />
+
     </DefaultBg>
   );
 }
@@ -46,24 +47,18 @@ export default function FolderPath({ fetchedDataInit }) {
 export async function getServerSideProps(context) {
   const { req, res } = context;
   const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
-    };
-  }
-
-  const userDb = await prisma.user.findUnique({
-    where: {
-      email: session.user.email,
-    },
-  });
+  // if (!session) {
+  //   return {
+  //     redirect: {
+  //       destination: '/login',
+  //       permanent: false,
+  //     },
+  //   };
+  // }
 
   const homeFolder = await prisma.folder.findFirst({
     where: {
-      userId: userDb.id,
+      userId: session?.user.id,
       outerFolderId: null,
       name: "Home",
     },
@@ -71,7 +66,7 @@ export async function getServerSideProps(context) {
 
   const binFolder = await prisma.folder.findFirst({
     where: {
-      userId: userDb.id,
+      userId: session?.user.id,
       outerFolderId: null,
       name: "Bin",
     },
@@ -81,7 +76,7 @@ export async function getServerSideProps(context) {
     await prisma.folder.create({
       data: {
         name: "Home",
-        userId: userDb.id,
+        userId: session?.user.id,
       },
     });
   }
@@ -90,7 +85,7 @@ export async function getServerSideProps(context) {
     await prisma.folder.create({
       data: {
         name: "Bin",
-        userId: userDb.id,
+        userId: session?.user.id,
       },
     });
   }
@@ -98,7 +93,7 @@ export async function getServerSideProps(context) {
 
   const files = await prisma.file.findMany({
     where: {
-      userId: userDb.id,
+      userId: session?.user.id,
     },
     select: {
       fileId: true,

@@ -1,9 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../../../../libs/prismadb';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]';
 import axios from 'axios';
-import { buffer } from 'stream/consumers';
 
 // make sure to set the response limit to false
 export const config = {
@@ -13,7 +10,7 @@ export const config = {
 }
 
 type FileType = {
-  fileId: string;
+  fileId: string; 
   name: string;
   url: string;
 };
@@ -33,12 +30,27 @@ export default async function handler(
     return res.status(400).json({ message: 'Bad Request: Missing or invalid fileId' });
   }
 
-  const file = await prisma.file.findUnique({
+  let file = await prisma.file.findUnique({
     where: { fileId },
     include: {
       hashFile: true,
     },
   });
+
+  if(!file){
+    const link_file = await prisma.link.findUnique({
+      where: { path: fileId },
+      select:{
+        file: {
+          include: {
+            hashFile: true
+          }
+        }
+      }
+    });
+    if(link_file && link_file.file)
+      file = link_file.file;
+  }
 
   if (!file) {
     return res.status(404).json({ message: 'File not found' });
@@ -53,7 +65,6 @@ export default async function handler(
       },
       responseType: 'arraybuffer',
     });
-    const buffer = Buffer.from(response.data, 'binary');
 
     console.log(response.headers)
     for(const key in response.headers){

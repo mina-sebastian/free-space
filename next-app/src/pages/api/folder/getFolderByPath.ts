@@ -57,6 +57,8 @@ export default async function handler(
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
+  
+
   const user = await session.user;
   
   //path is like "/folder1/folder2/folder3"
@@ -126,6 +128,4 @@ export default async function handler(
     files: updatedFiles,
     folderId: folder.folderId,
   });
-
-
 }

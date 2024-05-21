@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import DefaultBg from "../../../components/DefaultBg";
 import FileMenu from "../../../components/main/FileMenu";
@@ -15,34 +16,37 @@ export default function FolderPath({ fetchedDataInit }) {
   const [fetchedData, setFetchedData] = React.useState<any>(fetchedDataInit);
   const [refetchId, setRefetchId] = React.useState("initial");
 
-  const getFolderByPath = async (path: string) => {
+  console.log("can edit din path: " + fetchedData.canEdit);
+
+  const getFolderByPath = async (pathLink: string) => {
     try {
-      const response = await axios.post('/api/folder/getFolderByPath', { path });
-      setFetchedData(response.data);
+      const response = await axios.post('/api/folder/getFolderByLinkAndPath', { pathLink });
+      setFetchedData(prevData => ({ ...prevData, ...response.data }));
     } catch (error) {
       console.error('Error getting folder by path:', error);
     }
   };
 
   React.useEffect(() => {
-    const filepath = router.query.filepath;
+    const filepath = router.query.path as string[];
+    // console.log("File path: " + filepath.join('/'));
     if (filepath) {
-      getFolderByPath(filepath as string);
+      getFolderByPath(filepath.join('/'));
     }
     setRefetchId(cuid2.createId());
-  }, [router.query.filepath]);
+  }, [router.query.path]);
 
   const breadcrumbItems = React.useMemo(() => {
-    const path = router.query.filepath as string[];
+    const path = router.query.path as string[];
     return path ? path.filter(Boolean) : [];
-  }, [router.query.filepath]);
+  }, [router.query.path]);
 
   const handleBreadcrumbClick = (path: string) => {
-    router.push(`/f/${path}`);
+    router.push(`/l/${path}`);
   };
 
   return (
-    <DefaultBg currentlyOpen={router.query.filepath} folderId={fetchedData?.folderId} refetchId={refetchId}>
+    <DefaultBg currentlyOpen={router.query.path} folderId={fetchedData?.folderId} refetchId={refetchId}>
       <div role="presentation">
         <Breadcrumbs separator="›" aria-label="breadcrumb">
           {breadcrumbItems.map((item, index) => (
@@ -57,91 +61,111 @@ export default function FolderPath({ fetchedDataInit }) {
               }}
               aria-current={index === breadcrumbItems.length - 1 ? "page" : undefined}
             >
-              {item}
+              {index == 0 ? fetchedDataInit.folderName : item}
             </Link>
           ))}
         </Breadcrumbs>
       </div>
-      <FileMenu folders={fetchedData?.folders || []} files={fetchedData?.files || []} canEdit={true}/>
+      <FileMenu linkId={fetchedDataInit.linkId} folders={fetchedData?.folders || []} files={fetchedData?.files || []} canEdit={fetchedDataInit.canEdit} />
     </DefaultBg>
   );
 }
 
-const generateRecursiveOuterFolder = (paths) => {
+const generateRecursiveOuterFolder = (paths, sharedFolderId) => {
   if (paths.length <= 1) {
     return {
       name: paths[0],
-      outerFolder: null
+      outerFolderId: sharedFolderId
     };
   }
   return {
     name: paths[0],
-    outerFolder: generateRecursiveOuterFolder(paths.slice(1))
+    outerFolder: generateRecursiveOuterFolder(paths.slice(1), sharedFolderId)
   };
 };
 
 export async function getServerSideProps(context) {
   const { req, res } = context;
   const session = await getServerSession(req, res, authOptions);
-  if (!session) {
+  
+  const initPath: string[] = context.query.path;
+  const linkId = initPath[0];
+
+
+  const link = await prisma.link.findUnique({
+    where: {
+      path: linkId,
+    },
+    select: {
+      folderId: true,
+      fileId: true,
+      permission: true,  // Include permission in the query,
+      canSee: true,
+      file: {
+        select: {
+          fileId: true,
+          hashFile: {
+            select: {
+              size: true,
+            },
+          },
+          name: true,
+        },
+      },
+      folder: {
+        select: {
+          userId: true,
+          name: true,
+        }
+      }
+    },
+  });
+
+  if (!link || !link.folderId) {
+    return { notFound: true };
+  }
+  
+  if (!session && link.canSee == "AUTH") {
     return {
       redirect: {
-        destination: '/login',
+        destination: '/Home',
         permanent: false,
       },
     };
   }
 
-  const user = session.user;
-  const path = context.query.filepath;
+  const user = session != null? session.user : undefined;
+  
 
-  const userDb = await prisma.user.findUnique({
-    where: {
-      email: session.user.email,
-    },
-  });
+  // console.log("Path: ");
+  // console.log(initPath);
 
-  const homeFolder = await prisma.folder.findFirst({
-    where: {
-      userId: userDb.id,
-      outerFolderId: null,
-      name: "Home",
-    },
-  });
+  
+  const path = initPath.slice(1);
 
-  const binFolder = await prisma.folder.findFirst({
-    where: {
-      userId: userDb.id,
-      outerFolderId: null,
-      name: "Bin",
-    },
-  });
+  // console.log("Link ID: " + linkId);
 
-  if (!homeFolder) {
-    await prisma.folder.create({
-      data: {
-        name: "Home",
-        userId: userDb.id,
-      },
-    });
+ 
+
+  let whereQuery = {};
+  // console.log(path)
+  if(!path || path.length === 0){
+    whereQuery = {
+      folderId: link.folderId
+    };
+  }else{
+  whereQuery = generateRecursiveOuterFolder([...path].reverse(), link.folderId);
   }
 
-  if (!binFolder) {
-    await prisma.folder.create({
-      data: {
-        name: "Bin",
-        userId: userDb.id,
-      },
-    });
-  }
-
-  const whereQuery = generateRecursiveOuterFolder([...path].reverse());
+  // console.log("Where query: ");
+  // console.log(whereQuery);
 
   const folder = await prisma.folder.findFirst({
     select: {
       folderId: true,
       name: true,
       outerFolderId: true,
+      userId: true,  // Includem userId pentru a verifica proprietatea
       innerFolders: {
         select: {
           folderId: true,
@@ -152,6 +176,7 @@ export async function getServerSideProps(context) {
       files: {
         select: {
           fileId: true,
+          userId: true,  // Includem și aici userId
           hashFile: {
             select: {
               size: true,
@@ -170,14 +195,21 @@ export async function getServerSideProps(context) {
       },
     },
     where: {
-      userId: user.id,
       ...whereQuery,
     },
   });
 
+  // console.log("Folder: ");
+  // console.log(folder);
+
   if (!folder) {
     return { notFound: true };
   }
+
+  const isOwner = user != undefined ? folder.userId === user.id : false;
+  const canEdit = (link.permission === "EDIT") || isOwner;
+
+  console.log("Can edit: " + canEdit);
 
   return {
     props: {
@@ -185,6 +217,9 @@ export async function getServerSideProps(context) {
         folders: folder.innerFolders,
         files: folder.files,
         folderId: folder.folderId,
+        folderName: link.folder.name,
+        canEdit: canEdit,
+        linkId: linkId,
       },
     },
   };

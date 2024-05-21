@@ -171,7 +171,6 @@ const FileMenu: React.FC<FileMenuProps> = ({files }) => {
       
       {searchPerformed && (
         <>
-          <Divider />
           <h2>Files</h2>
           <Stack direction="row" alignItems="center" spacing={2}>
             <FormControlLabel

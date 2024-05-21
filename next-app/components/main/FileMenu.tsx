@@ -1,5 +1,5 @@
-import React, { useRef, useReducer, useCallback, useState } from 'react';
-import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem, Select, FormControl, InputLabel, TextField } from '@mui/material';
+import React, { useRef, useReducer, useCallback, useState, memo } from 'react';
+import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import FileCard from '../cards/FileCard';
 import LinkGenerationModal from '../modals/LinkGenerationModal';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -11,6 +11,8 @@ import SearchBar from './SearchBar';
 interface FileMenuProps {
   folders: Array<{ folderId: string; name: string }>;
   files: Array<{ fileId: string; name: string; hashFile: { size: number } }>;
+  canEdit: boolean;
+  linkId: string;
 }
 
 type State = {
@@ -18,19 +20,40 @@ type State = {
   checkedFiles: string[];
   selectAllFolders: boolean;
   selectAllFiles: boolean;
+  sortCriteria: string;
+  sortOrder: string;
+  folderSortCriteria: string;
+  folderSortOrder: string;
+  searchQuery: string;
+  anchorEl: HTMLElement | null;
+  selectedItem: { itemId: string; itemType: 'folder' | 'file'; name: string } | null;
 };
 
 type Action =
   | { type: 'TOGGLE_ALL_FOLDERS'; checked: boolean; folderIds: string[] }
   | { type: 'TOGGLE_ALL_FILES'; checked: boolean; fileIds: string[] }
   | { type: 'TOGGLE_FOLDER'; folderId: string }
-  | { type: 'TOGGLE_FILE'; fileId: string };
+  | { type: 'TOGGLE_FILE'; fileId: string }
+  | { type: 'SET_SORT_CRITERIA'; sortCriteria: string }
+  | { type: 'SET_SORT_ORDER'; sortOrder: string }
+  | { type: 'SET_FOLDER_SORT_CRITERIA'; folderSortCriteria: string }
+  | { type: 'SET_FOLDER_SORT_ORDER'; folderSortOrder: string }
+  | { type: 'SET_SEARCH_QUERY'; searchQuery: string }
+  | { type: 'SET_ANCHOR_EL'; anchorEl: HTMLElement | null }
+  | { type: 'SET_SELECTED_ITEM'; selectedItem: { itemId: string; itemType: 'folder' | 'file'; name: string } | null };
 
 const initialState: State = {
   checkedFolders: [],
   checkedFiles: [],
   selectAllFolders: false,
   selectAllFiles: false,
+  sortCriteria: 'name',
+  sortOrder: 'asc',
+  folderSortCriteria: 'name',
+  folderSortOrder: 'asc',
+  searchQuery: '',
+  anchorEl: null,
+  selectedItem: null,
 };
 
 const reducer = (state: State, action: Action): State => {
@@ -61,42 +84,66 @@ const reducer = (state: State, action: Action): State => {
           ? state.checkedFiles.filter((id) => id !== action.fileId)
           : [...state.checkedFiles, action.fileId],
       };
+    case 'SET_SORT_CRITERIA':
+      return {
+        ...state,
+        sortCriteria: action.sortCriteria,
+      };
+    case 'SET_SORT_ORDER':
+      return {
+        ...state,
+        sortOrder: action.sortOrder,
+      };
+    case 'SET_FOLDER_SORT_CRITERIA':
+      return {
+        ...state,
+        folderSortCriteria: action.folderSortCriteria,
+      };
+    case 'SET_FOLDER_SORT_ORDER':
+      return {
+        ...state,
+        folderSortOrder: action.folderSortOrder,
+      };
+    case 'SET_SEARCH_QUERY':
+      return {
+        ...state,
+        searchQuery: action.searchQuery,
+      };
+    case 'SET_ANCHOR_EL':
+      return {
+        ...state,
+        anchorEl: action.anchorEl,
+      };
+    case 'SET_SELECTED_ITEM':
+      return {
+        ...state,
+        selectedItem: action.selectedItem,
+      };
     default:
       return state;
   }
 };
 
-const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
+const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) => {
   const modalRef = useRef(null);
   const [state, dispatch] = useReducer(reducer, initialState);
   const router = useRouter();
-  
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedItem, setSelectedItem] = useState<{ itemId: string; itemType: 'folder' | 'file'; name: string } | null>(null);
 
-  const [sortCriteria, setSortCriteria] = useState('name');
-  const [sortOrder, setSortOrder] = useState('asc');
+  const handleMenuClick = useCallback((event: React.MouseEvent<HTMLElement>, itemId: string, itemType: 'folder' | 'file', name: string) => {
+    dispatch({ type: 'SET_ANCHOR_EL', anchorEl: event.currentTarget });
+    dispatch({ type: 'SET_SELECTED_ITEM', selectedItem: { itemId, itemType, name } });
+  }, []);
 
-  const [folderSortCriteria, setFolderSortCriteria] = useState('name');
-  const [folderSortOrder, setFolderSortOrder] = useState('asc');
+  const handleMenuClose = useCallback(() => {
+    dispatch({ type: 'SET_ANCHOR_EL', anchorEl: null });
+    dispatch({ type: 'SET_SELECTED_ITEM', selectedItem: null });
+  }, []);
 
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, itemId: string, itemType: 'folder' | 'file', name: string) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedItem({ itemId, itemType, name });
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedItem(null);
-  };
-
-  const handleRenameItem = () => {
-    if (selectedItem) {
-      const newName = prompt(`Enter new ${selectedItem.itemType} name:`, selectedItem.name);
+  const handleRenameItem = useCallback(() => {
+    if (state.selectedItem) {
+      const newName = prompt(`Enter new ${state.selectedItem.itemType} name:`, state.selectedItem.name);
       if (newName !== null) {
-        axios.put(`/api/${selectedItem.itemType}/${selectedItem.itemId}/rename`, { newName })
+        axios.put(`/api/${state.selectedItem.itemType}/${state.selectedItem.itemId}/rename`, { newName })
           .then(response => {
             console.log('Item renamed successfully:', response.data);
             router.replace(router.asPath);
@@ -107,11 +154,11 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
       }
     }
     handleMenuClose();
-  };
+  }, [state.selectedItem, router, handleMenuClose]);
 
-  const handleDeleteItem = () => {
-    if (selectedItem && window.confirm(`Are you sure you want to delete ${selectedItem.itemType} "${selectedItem.name}" and all its contents?`)) {
-      axios.delete(`/api/${selectedItem.itemType}/${selectedItem.itemId}/delete`)
+  const handleDeleteItem = useCallback(() => {
+    if (state.selectedItem && window.confirm(`Are you sure you want to delete ${state.selectedItem.itemType} "${state.selectedItem.name}" and all its contents?`)) {
+      axios.delete(`/api/${state.selectedItem.itemType}/${state.selectedItem.itemId}/delete`)
         .then(response => {
           console.log('Item deleted successfully:', response.data);
           router.replace(router.asPath);
@@ -121,7 +168,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
         });
     }
     handleMenuClose();
-  };
+  }, [state.selectedItem, router, handleMenuClose]);
 
   const handleSelectAllFolders = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch({ type: 'TOGGLE_ALL_FOLDERS', checked: event.target.checked, folderIds: folders.map(folder => folder.folderId) });
@@ -131,41 +178,41 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
     dispatch({ type: 'TOGGLE_ALL_FILES', checked: event.target.checked, fileIds: files.map(file => file.fileId) });
   }, [files]);
 
-  const handleSortCriteriaChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setSortCriteria(event.target.value as string);
-  };
+  const handleSortCriteriaChange = useCallback((event: React.ChangeEvent<{ value: unknown }>) => {
+    dispatch({ type: 'SET_SORT_CRITERIA', sortCriteria: event.target.value as string });
+  }, []);
 
-  const handleSortOrderChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setSortOrder(event.target.value as string);
-  };
+  const handleSortOrderChange = useCallback((event: React.ChangeEvent<{ value: unknown }>) => {
+    dispatch({ type: 'SET_SORT_ORDER', sortOrder: event.target.value as string });
+  }, []);
 
-  const handleFolderSortCriteriaChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setFolderSortCriteria(event.target.value as string);
-  };
+  const handleFolderSortCriteriaChange = useCallback((event: React.ChangeEvent<{ value: unknown }>) => {
+    dispatch({ type: 'SET_FOLDER_SORT_CRITERIA', folderSortCriteria: event.target.value as string });
+  }, []);
 
-  const handleFolderSortOrderChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setFolderSortOrder(event.target.value as string);
-  };
+  const handleFolderSortOrderChange = useCallback((event: React.ChangeEvent<{ value: unknown }>) => {
+    dispatch({ type: 'SET_FOLDER_SORT_ORDER', folderSortOrder: event.target.value as string });
+  }, []);
 
-  const handleSearchQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
+  const handleSearchQueryChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch({ type: 'SET_SEARCH_QUERY', searchQuery: event.target.value });
+  }, []);
 
-  const filteredFiles = files.filter(file => file.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  const filteredFolders = folders.filter(folder => folder.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredFiles = files.filter(file => file.name.toLowerCase().includes(state.searchQuery.toLowerCase()));
+  const filteredFolders = folders.filter(folder => folder.name.toLowerCase().includes(state.searchQuery.toLowerCase()));
 
   const sortedFiles = [...filteredFiles].sort((a, b) => {
-    if (sortCriteria === 'name') {
-      return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-    } else if (sortCriteria === 'size') {
-      return sortOrder === 'asc' ? a.hashFile.size - b.hashFile.size : b.hashFile.size - a.hashFile.size;
+    if (state.sortCriteria === 'name') {
+      return state.sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+    } else if (state.sortCriteria === 'size') {
+      return state.sortOrder === 'asc' ? a.hashFile.size - b.hashFile.size : b.hashFile.size - a.hashFile.size;
     }
     return 0;
   });
 
   const sortedFolders = [...filteredFolders].sort((a, b) => {
-    if (folderSortCriteria === 'name') {
-      return folderSortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+    if (state.folderSortCriteria === 'name') {
+      return state.folderSortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
     }
     return 0;
   });
@@ -173,16 +220,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
   return (
     <div>
       <LinkGenerationModal ref={modalRef} />
-      <SearchBar searchQuery={searchQuery} onSearchQueryChange={handleSearchQueryChange} />
-      {/* <TextField
-        label="Search"
-        variant="outlined"
-        size="small"
-        fullWidth
-        margin="normal"
-        value={searchQuery}
-        onChange={handleSearchQueryChange}
-      /> */}
+      <SearchBar searchQuery={state.searchQuery} onSearchQueryChange={handleSearchQueryChange} />
       <h2>Folders</h2>
       <Stack direction="row" alignItems="center" spacing={2}>
         <FormControlLabel
@@ -201,13 +239,13 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
         )}
         <FormControl variant="outlined" size="small">
           <InputLabel>Sort By</InputLabel>
-          <Select value={folderSortCriteria} onChange={handleFolderSortCriteriaChange} label="Sort By">
+          <Select value={state.folderSortCriteria} onChange={handleFolderSortCriteriaChange} label="Sort By">
             <MenuItem value="name">Name</MenuItem>
           </Select>
         </FormControl>
         <FormControl variant="outlined" size="small">
           <InputLabel>Order</InputLabel>
-          <Select value={folderSortOrder} onChange={handleFolderSortOrderChange} label="Order">
+          <Select value={state.folderSortOrder} onChange={handleFolderSortOrderChange} label="Order">
             <MenuItem value="asc">Ascending</MenuItem>
             <MenuItem value="desc">Descending</MenuItem>
           </Select>
@@ -215,14 +253,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
       </Stack>
       <List>
         {sortedFolders.map((folder) => (
-          <ListItem key={folder.folderId} disablePadding>
-            <Checkbox
-              sx={{ m: -1 }}
-              checked={state.checkedFolders.includes(folder.folderId)}
-              onChange={() => dispatch({ type: 'TOGGLE_FOLDER', folderId: folder.folderId })}
-            />
-            <FileCard itemId={folder.folderId} itemType="folder" name={folder.name} onShare={() => modalRef.current?.open()} onMenuClick={handleMenuClick} />
-          </ListItem>
+          <MemoizedListItem key={folder.folderId} folder={folder} state={state} dispatch={dispatch} canEdit={canEdit} handleMenuClick={handleMenuClick} modalRef={modalRef} />
         ))}
       </List>
       <Divider />
@@ -244,14 +275,14 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
         )}
         <FormControl variant="outlined" size="small">
           <InputLabel>Sort By</InputLabel>
-          <Select value={sortCriteria} onChange={handleSortCriteriaChange} label="Sort By">
+          <Select value={state.sortCriteria} onChange={handleSortCriteriaChange} label="Sort By">
             <MenuItem value="name">Name</MenuItem>
             <MenuItem value="size">Size</MenuItem>
           </Select>
         </FormControl>
         <FormControl variant="outlined" size="small">
           <InputLabel>Order</InputLabel>
-          <Select value={sortOrder} onChange={handleSortOrderChange} label="Order">
+          <Select value={state.sortOrder} onChange={handleSortOrderChange} label="Order">
             <MenuItem value="asc">Ascending</MenuItem>
             <MenuItem value="desc">Descending</MenuItem>
           </Select>
@@ -259,23 +290,35 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files }) => {
       </Stack>
       <List>
         {sortedFiles.map((file) => (
-          <ListItem key={file.fileId}>
-            <Checkbox
-              sx={{ m: -1 }}
-              checked={state.checkedFiles.includes(file.fileId)}
-              onChange={() => dispatch({ type: 'TOGGLE_FILE', fileId: file.fileId })}
-            />
-            <FileCard itemId={file.fileId} itemType="file" name={file.name} link={`/v/${file.fileId}`} onShare={() => modalRef.current?.open()} onMenuClick={handleMenuClick} />
-          </ListItem>
+          <MemoizedListItem key={file.fileId} file={file} state={state} dispatch={dispatch} canEdit={canEdit} handleMenuClick={handleMenuClick} modalRef={modalRef} linkId={linkId} />
         ))}
       </List>
-      <Menu id="menu" anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-        {router.asPath.startsWith('/f/Home') && <MenuItem onClick={handleRenameItem}>Rename</MenuItem>}
-        <MenuItem onClick={handleDeleteItem}>Delete</MenuItem>
-        {router.asPath.startsWith('/f/Home') && <MenuItem onClick={() => selectedItem && modalRef.current?.open(selectedItem.itemType, selectedItem.itemId, selectedItem.name)}>Share</MenuItem>}
-      </Menu>
+
+      {!!canEdit && (
+        <Menu id="menu" anchorEl={state.anchorEl} open={Boolean(state.anchorEl)} onClose={handleMenuClose}>
+          {(router.asPath.startsWith('/f/Home') || canEdit === true) && <MenuItem onClick={handleRenameItem}>Rename</MenuItem>}
+          {<MenuItem onClick={handleDeleteItem}>Delete</MenuItem>}
+          {router.asPath.startsWith('/f/Home') && <MenuItem onClick={() => state.selectedItem && modalRef.current?.open(state.selectedItem.itemType, state.selectedItem.itemId, state.selectedItem.name)}>Share</MenuItem>}
+        </Menu>
+      )}
     </div>
   );
 };
+
+const MemoizedListItem = memo(({ folder, file, state, dispatch, canEdit, handleMenuClick, modalRef, linkId }) => {
+  const item = folder || file;
+  const itemType = folder ? 'folder' : 'file';
+  // console.log(file)
+  return (
+    <ListItem disablePadding>
+      <Checkbox
+        sx={{ m: -1 }}
+        checked={state.checkedFolders.includes(item.folderId) || state.checkedFiles.includes(item.fileId)}
+        onChange={() => dispatch({ type: itemType === 'folder' ? 'TOGGLE_FOLDER' : 'TOGGLE_FILE', folderId: item.folderId, fileId: item.fileId })}
+      />
+      <FileCard link={file ? linkId ? `${file.fileId}?q=${linkId}` : file.fileId : ""} itemId={item.folderId || item.fileId} itemType={itemType} name={item.name} onShare={() => modalRef.current?.open()} onMenuClick={(event) => handleMenuClick(event, item.folderId || item.fileId, itemType, item.name)} canEdit={canEdit} />
+    </ListItem>
+  );
+});
 
 export default FileMenu;

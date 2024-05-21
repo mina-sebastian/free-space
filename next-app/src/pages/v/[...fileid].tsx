@@ -3,7 +3,7 @@ import DocViewer, { BMPRenderer, CSVRenderer, DocRenderer, PDFRenderer, PNGRende
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../api/auth/[...nextauth]';
 import MyCustomVideoRenderer from '../../../components/renderer/CustomVideoRenderer';
-import MyCustomTextRenderer from '../../../components/renderer/CustomCodingREnderer';
+import MyCustomTextRenderer from '../../../components/renderer/CustomCodingRenderer';
 
 export default function FileViewer({ file }) {
   return (
@@ -15,26 +15,84 @@ export default function FileViewer({ file }) {
   );
 }
 
+const isInFolder = async (folderId, sharedFolderId) => {
+  if(folderId == sharedFolderId)
+    return true;
+  const folder = await prisma.folder.findUnique({
+    where: {
+      folderId: folderId
+    },
+    select: {
+      outerFolderId: true
+    }
+  });
+  if(folder.outerFolderId == null)
+    return false;
+
+  return isInFolder(folder.outerFolderId, sharedFolderId);
+}
+
 export async function getServerSideProps(context) {
   const { req, res } = context;
   const session = await getServerSession(req, res, authOptions);
 
-  if (!session) {
+  const query = context.query.q;
+
+  console.log(query);
+
+  const link_quest = await prisma.link.findUnique({
+    where: {
+      path: !!query ? query : "UNKNOWN_PATH",
+    },
+    select: {
+      canSee: true,
+      folderId: true
+    }
+  });
+
+  if ((!link_quest || link_quest.canSee != "ALL") && !session) {
     return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
+      notFound: true,
     };
   }
 
   const fileid = context.query.fileid[0];
 
-  const file = await prisma.file.findUnique({
+  let file = await prisma.file.findUnique({
     where: {
       fileId: fileid,
     },
+    select: {
+      userId: true,
+      folderId: true,
+      name: true,
+      fileId: true
+    }
   });
+
+  if(!!file && (!session || (file.userId != session.user.id))){
+    //verify recursively if the file is in a folder that the user has access
+    if(!isInFolder(file.folderId, link_quest.folderId)){
+      return {
+        notFound: true,
+      };
+    }
+  }
+
+  if(!file){
+    const link_file = await prisma.link.findUnique({
+      where: { path: fileid },
+      select:{
+        file: {
+          include: {
+            hashFile: true
+          }
+        }
+      }
+    });
+    if(link_file && link_file.file)
+      file = link_file.file;
+  }
 
   if (!file) {
     return {

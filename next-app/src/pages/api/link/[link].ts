@@ -50,7 +50,15 @@ export default async function handler(
       return res.status(403).json({ error: 'Link expired' });
     }
 
-    res.status(200).json({ data: linkData });
+    console.log(linkData);
+
+    if(linkData.file){
+      res.redirect(`/v/${linkData.fileId}`);
+    }
+    else if(linkData.folder){
+        res.redirect(`/l/${linkData.path}`);
+    }
+   
   } catch (error) {
     console.error('Database or server error:', error);
     res.status(500).json({ error: 'Internal server error' });
