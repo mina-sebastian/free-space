@@ -1,7 +1,8 @@
 import React, { useRef, useReducer, useCallback, useState, memo } from 'react';
-import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem, Select, FormControl, InputLabel, Button } from '@mui/material';
 import FileCard from '../cards/FileCard';
 import LinkGenerationModal from '../modals/LinkGenerationModal';
+import TagsModal from '../modals/TagsModal'; // Import the TagsModal component
 import DeleteIcon from '@mui/icons-material/Delete';
 import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
 import { useRouter } from 'next/router';
@@ -127,6 +128,7 @@ const reducer = (state: State, action: Action): State => {
 const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) => {
   const modalRef = useRef(null);
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [tagsModalOpen, setTagsModalOpen] = useState<boolean>(false);
   const router = useRouter();
 
   const handleMenuClick = useCallback((event: React.MouseEvent<HTMLElement>, itemId: string, itemType: 'folder' | 'file', name: string) => {
@@ -217,9 +219,18 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
     return 0;
   });
 
+  const handleTagsModalOpen = useCallback(() => {
+    setTagsModalOpen(true);
+  }, []);
+
+  const handleTagsModalClose = useCallback(() => {
+    setTagsModalOpen(false);
+  }, []);
+
   return (
     <div>
       <LinkGenerationModal ref={modalRef} />
+      <TagsModal open={tagsModalOpen} onClose={handleTagsModalClose} fileId={state.selectedItem?.itemId || ''} />
       <SearchBar searchQuery={state.searchQuery} onSearchQueryChange={handleSearchQueryChange} />
       <h2>Folders</h2>
       <Stack direction="row" alignItems="center" spacing={2}>
@@ -293,11 +304,11 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
           <MemoizedListItem key={file.fileId} file={file} state={state} dispatch={dispatch} canEdit={canEdit} handleMenuClick={handleMenuClick} modalRef={modalRef} linkId={linkId} />
         ))}
       </List>
-
       {!!canEdit && (
         <Menu id="menu" anchorEl={state.anchorEl} open={Boolean(state.anchorEl)} onClose={handleMenuClose}>
           {(router.asPath.startsWith('/f/Home') || canEdit === true) && <MenuItem onClick={handleRenameItem}>Rename</MenuItem>}
           {<MenuItem onClick={handleDeleteItem}>Delete</MenuItem>}
+          {router.asPath.startsWith('/f/Home') && state.selectedItem?.itemType === 'file' && <MenuItem onClick={handleTagsModalOpen}>Tags</MenuItem>}
           {router.asPath.startsWith('/f/Home') && <MenuItem onClick={() => state.selectedItem && modalRef.current?.open(state.selectedItem.itemType, state.selectedItem.itemId, state.selectedItem.name)}>Share</MenuItem>}
         </Menu>
       )}
@@ -308,7 +319,6 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
 const MemoizedListItem = memo(({ folder, file, state, dispatch, canEdit, handleMenuClick, modalRef, linkId }) => {
   const item = folder || file;
   const itemType = folder ? 'folder' : 'file';
-  // console.log(file)
   return (
     <ListItem disablePadding>
       <Checkbox
