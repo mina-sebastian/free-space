@@ -36,8 +36,9 @@ export default async function generateLink(
 
   try {
     if (type === 'file') {
+      console.log('file', id);
       const file = await prisma.file.findUnique({
-        where: { fileId: id, user:{email: session.user.email} }
+        where: { fileId: id, userId: session.user.id}
       });
 
       if (!file) {
