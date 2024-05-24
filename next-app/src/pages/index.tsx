@@ -14,6 +14,7 @@ import IndexFileMenu from '../../components/main/IndexFileMenu';
 
 
 export default function FolderPath({ fetchedDataInit }) {
+  const session = useSession();
   const router = useRouter();
   const [fetchedData, setFetchedData] = React.useState<any>(fetchedDataInit);
   const [refetchId, setRefetchId] = React.useState("initial");
@@ -38,10 +39,8 @@ export default function FolderPath({ fetchedDataInit }) {
       <WelcomeBg>
           <Typography variant="h4" align="center">
             free-space is a local cloud storage service that allows you to store your files on your server!
-          </Typography>
-          {session && (
-            <IndexFileMenu files={fetchedData?.files || []} />
-          )}
+          </Typography>      
+          {!!session.data && <IndexFileMenu files={fetchedData?.files || []} />}
       </WelcomeBg>
 
     </DefaultBg>
@@ -97,7 +96,7 @@ export async function getServerSideProps(context) {
 
   const files = await prisma.file.findMany({
     where: {
-      userId: session?.user.id,
+      userId: session ? session.user.id : "UNKNOWN_USER_ID",
     },
     select: {
       fileId: true,
