@@ -12,13 +12,11 @@ import WelcomeBg from '../../components/WelcomeBg';
 import { Typography } from '@mui/material';
 import IndexFileMenu from '../../components/main/IndexFileMenu';
 
-
 export default function FolderPath({ fetchedDataInit }) {
   const session = useSession();
   const router = useRouter();
   const [fetchedData, setFetchedData] = React.useState<any>(fetchedDataInit);
   const [refetchId, setRefetchId] = React.useState("initial");
-  const { data: session } = useSession();
 
   const getAllUserFilesAndFolders = async () => {
     try {
