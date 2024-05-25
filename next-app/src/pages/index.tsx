@@ -38,9 +38,10 @@ export default function FolderPath({ fetchedDataInit }) {
           <Typography variant="h4" align="center">
             free-space is a local cloud storage service that allows you to store your files on your server!
           </Typography>      
-          {!!session.data && <IndexFileMenu files={fetchedData?.files || []} />}
+          
       </WelcomeBg>
 
+      {!!session.data && <IndexFileMenu files={fetchedData?.files || []} />}
     </DefaultBg>
   );
 }
