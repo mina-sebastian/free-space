@@ -36,8 +36,8 @@ def process_streaming_response(response):
 # Main execution starts here
 if __name__ == "__main__":
     # encoded_image = encode_image_to_base64("test_images/test1.jpg")
-    # encoded_image = encode_image_to_base64("test_images/test2.jpeg")
-    encoded_image = encode_image_to_base64("test_images/test3.jpeg")
+    encoded_image = encode_image_to_base64("test_images/test2.jpeg")
+    # encoded_image = encode_image_to_base64("test_images/test3.jpeg")
     
     # API endpoints and headers
     url = 'http://localhost:11434/api/generate'
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # Request data
     data = {
         "model": "llava",
-        "prompt": "You are an obedient LLM that extracts tags from images. Enumerate the distinct words that describe this image separated by ','. Do not use connection words. Do not include numbers or rank. The tags need to be 1 word long.",
+        "prompt": "Given the tags: sad, puppy, square, golden retriever, sick, litter, burned, cute, fluffy, cats, dogs, red, purple, building, evil, demon. List at least 5 distinct single-word descriptors for this image, separated by commas. Use existing tags if possible; create new ones only if necessary. Avoid connection words, numbers, or ranks.",
         "images": [encoded_image]
     }
     

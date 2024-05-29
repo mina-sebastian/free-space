@@ -3,7 +3,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "cypress:open": "cypress open"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^1.6.0",
@@ -35,9 +36,12 @@
     "react-window": "^1.8.10"
   },
   "devDependencies": {
+    "@testing-library/cypress": "^10.0.1",
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.25",
     "@types/react-dom": "^18.0.9",
+    "cypress": "^13.10.0",
+    "cypress-social-logins": "^1.14.1",
     "typescript": "^4.9.3"
   }
 }
