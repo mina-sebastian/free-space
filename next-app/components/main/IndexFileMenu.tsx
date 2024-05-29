@@ -1,4 +1,4 @@
-import React, { useRef, useReducer, useCallback, useState } from 'react';
+import React, { useRef, useReducer, useCallback, useState, useEffect } from 'react';
 import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem, Select, FormControl, InputLabel, TextField } from '@mui/material';
 import FileCard from '../cards/FileCard';
 import LinkGenerationModal from '../modals/LinkGenerationModal';
@@ -9,7 +9,6 @@ import axios from 'axios';
 import SearchBar from './SearchBar';
 
 interface FileMenuProps {
-  folders: Array<{ folderId: string; name: string }>;
   files: Array<{ fileId: string; name: string; hashFile: { size: number } }>;
 }
 
@@ -24,7 +23,8 @@ type Action =
   | { type: 'TOGGLE_ALL_FOLDERS'; checked: boolean; folderIds: string[] }
   | { type: 'TOGGLE_ALL_FILES'; checked: boolean; fileIds: string[] }
   | { type: 'TOGGLE_FOLDER'; folderId: string }
-  | { type: 'TOGGLE_FILE'; fileId: string };
+  | { type: 'TOGGLE_FILE'; fileId: string }
+  | { type: 'UPDATE_SELECT_ALL_FILES' };
 
 const initialState: State = {
   checkedFolders: [],
@@ -55,18 +55,25 @@ const reducer = (state: State, action: Action): State => {
           : [...state.checkedFolders, action.folderId],
       };
     case 'TOGGLE_FILE':
+      const updatedCheckedFiles = state.checkedFiles.includes(action.fileId)
+        ? state.checkedFiles.filter((id) => id !== action.fileId)
+        : [...state.checkedFiles, action.fileId];
       return {
         ...state,
-        checkedFiles: state.checkedFiles.includes(action.fileId)
-          ? state.checkedFiles.filter((id) => id !== action.fileId)
-          : [...state.checkedFiles, action.fileId],
+        checkedFiles: updatedCheckedFiles,
+        selectAllFiles: updatedCheckedFiles.length === state.checkedFiles.length ? state.selectAllFiles : false,
+      };
+    case 'UPDATE_SELECT_ALL_FILES':
+      return {
+        ...state,
+        selectAllFiles: state.checkedFiles.length === state.checkedFiles.length,
       };
     default:
       return state;
   }
 };
 
-const FileMenu: React.FC<FileMenuProps> = ({files }) => {
+const FileMenu: React.FC<FileMenuProps> = ({ files }) => {
   const modalRef = useRef(null);
   const [state, dispatch] = useReducer(reducer, initialState);
   const router = useRouter();
@@ -76,9 +83,6 @@ const FileMenu: React.FC<FileMenuProps> = ({files }) => {
 
   const [sortCriteria, setSortCriteria] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
-
-  const [folderSortCriteria, setFolderSortCriteria] = useState('name');
-  const [folderSortOrder, setFolderSortOrder] = useState('asc');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchPerformed, setSearchPerformed] = useState(false);
@@ -124,7 +128,6 @@ const FileMenu: React.FC<FileMenuProps> = ({files }) => {
     handleMenuClose();
   };
 
-
   const handleSelectAllFiles = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch({ type: 'TOGGLE_ALL_FILES', checked: event.target.checked, fileIds: files.map(file => file.fileId) });
   }, [files]);
@@ -135,14 +138,6 @@ const FileMenu: React.FC<FileMenuProps> = ({files }) => {
 
   const handleSortOrderChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     setSortOrder(event.target.value as string);
-  };
-
-  const handleFolderSortCriteriaChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setFolderSortCriteria(event.target.value as string);
-  };
-
-  const handleFolderSortOrderChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setFolderSortOrder(event.target.value as string);
   };
 
   const handleSearchQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,6 +159,76 @@ const FileMenu: React.FC<FileMenuProps> = ({files }) => {
   });
 
 
+
+const handleDeleteFiles = useCallback(() => {
+  if (state.checkedFiles.length === 0) return;
+
+  if (window.confirm(`Are you sure you want to delete the selected files?`)) {
+    // Create an array of file IDs to delete
+    const fileIdsToDelete = state.checkedFiles;
+
+    // Send a batch request to delete all files
+    axios.delete('/api/file/deleteBatchIndex', { data: { fileIds: fileIdsToDelete } })
+      .then(response => {
+        console.log('Files deleted successfully:', response.data);
+        // Reload the page or update the file list
+        router.replace(router.asPath);
+      })
+      .catch(error => {
+        console.error('Error deleting files:', error);
+      });
+  }
+  handleMenuClose();
+}, [state.checkedFiles, router, handleMenuClose]);
+
+
+const [foldersMenuOpen, setFoldersMenuOpen] = useState(false);
+const [foldersMenuAnchorEl, setFoldersMenuAnchorEl] = useState<HTMLElement | null>(null);
+const [userFolders, setUserFolders] = useState<Array<{ folderId: string; name: string }>>([]);
+
+// Fetch user's folders from API
+useEffect(() => {
+  const fetchUserFolders = async () => {
+    try {
+      const response = await axios.get('/api/folder/getFolders');
+      setUserFolders(response.data.folders);
+    } catch (error) {
+      console.error('Error fetching user folders:', error);
+    }
+  };
+  fetchUserFolders();
+}, []);
+
+// Handle opening folders menu
+const handleOpenFoldersMenu = (event: React.MouseEvent<HTMLElement>) => {
+  setFoldersMenuOpen(true);
+  setFoldersMenuAnchorEl(event.currentTarget);
+};
+
+// Handle closing folders menu
+const handleCloseFoldersMenu = () => {
+  setFoldersMenuOpen(false);
+};
+
+
+const handleMoveFileToFolder = async (destinationFolderId: string) => {
+  try {
+    // Send a batch request to move files
+    const response = await axios.put('/api/file/moveBatch', {
+      fileIds: state.checkedFiles,
+      destinationFolderId
+    });
+    console.log('Files moved successfully:', response.data);
+    // Reload the page or update the file list
+    router.replace(router.asPath);
+  } catch (error) {
+    console.error('Error moving files:', error);
+  }
+
+  // Close the folders menu
+  handleCloseFoldersMenu();
+};
+
   return (
     <div>
       <LinkGenerationModal ref={modalRef} />
@@ -179,12 +244,25 @@ const FileMenu: React.FC<FileMenuProps> = ({files }) => {
             />
             {state.checkedFiles.length > 0 && (
               <>
-                <IconButton aria-label="delete">
+                <IconButton aria-label="delete" onClick={handleDeleteFiles}>
                   <DeleteIcon />
                 </IconButton>
-                <IconButton aria-label="move">
+                <IconButton aria-label="move" onClick={handleOpenFoldersMenu}>
                   <DriveFileMoveIcon />
                 </IconButton>
+
+                <Menu
+                  id="folders-menu"
+                  anchorEl={foldersMenuAnchorEl}
+                  open={foldersMenuOpen}
+                  onClose={handleCloseFoldersMenu}
+                >
+                  {userFolders.map(folder => (
+                    <MenuItem key={folder.folderId} onClick={() => handleMoveFileToFolder(folder.folderId)}>
+                      {folder.name}
+                    </MenuItem>
+                  ))}
+                </Menu>
               </>
             )}
             <FormControl variant="outlined" size="small">
@@ -210,7 +288,14 @@ const FileMenu: React.FC<FileMenuProps> = ({files }) => {
                   checked={state.checkedFiles.includes(file.fileId)}
                   onChange={() => dispatch({ type: 'TOGGLE_FILE', fileId: file.fileId })}
                 />
-                <FileCard itemId={file.fileId} itemType="file" name={file.name} link={`/v/${file.fileId}`} onShare={() => modalRef.current?.open()} onMenuClick={handleMenuClick} />
+                <FileCard 
+                  itemId={file.fileId} 
+                  itemType="file" 
+                  name={file.name} 
+                  link={`/v/${file.fileId}`} 
+                  onShare={() => modalRef.current?.open()} 
+                  onMenuClick={(event) => handleMenuClick(event, file.fileId, 'file', file.name)} 
+                />
               </ListItem>
             ))}
           </List>
