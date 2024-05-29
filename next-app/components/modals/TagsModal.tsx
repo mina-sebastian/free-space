@@ -1,20 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Box, TextField, Button, List, ListItem, ListItemText, IconButton } from '@mui/material';
+import { Modal, Box, Button, List, ListItem, ListItemText, IconButton, TextField, Autocomplete } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 
 const TagsModal = ({ open, onClose, fileId }) => {
-  console.log("FILE ID",fileId)
+  console.log("FILE ID", fileId);
   const [tags, setTags] = useState([]);
+  const [allTags, setAllTags] = useState([]);
   const [newTag, setNewTag] = useState('');
 
-  useEffect(() => {
+  const fetchTags = () => {
     if (fileId) {
       // Fetch existing tags for the file
       axios.get(`/api/file/getTags?fileId=${fileId}`)
         .then(response => setTags(response.data))
         .catch(error => console.error('Error fetching tags:', error));
+
+      // Fetch all available tags
+      axios.get('/api/file/getAllTags')
+        .then(response => setAllTags(response.data))
+        .catch(error => console.error('Error fetching all tags:', error));
     }
+  };
+
+  useEffect(() => {
+    fetchTags();
   }, [fileId]);
 
   const handleAddTag = () => {
@@ -23,6 +33,8 @@ const TagsModal = ({ open, onClose, fileId }) => {
         .then(response => {
           setTags([...tags, response.data]);
           setNewTag('');
+          // Fetch all tags again to update the list
+          fetchTags();
         })
         .catch(error => console.error('Error adding tag:', error));
     }
@@ -52,14 +64,25 @@ const TagsModal = ({ open, onClose, fileId }) => {
         }}
       >
         <h2>Manage Tags</h2>
-        <TextField
-          label="New Tag"
+        <Autocomplete
+          freeSolo
+          options={allTags.map(tag => tag.name)}
           value={newTag}
-          onChange={(e) => setNewTag(e.target.value)}
-          fullWidth
-          margin="normal"
+          onChange={(event, newValue) => setNewTag(newValue)}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="New Tag"
+              variant="outlined"
+              onChange={(e) => setNewTag(e.target.value)}
+              fullWidth
+              margin="normal"
+            />
+          )}
         />
-        <Button variant="contained" color="primary" onClick={handleAddTag}>Add Tag</Button>
+        <Button variant="contained" color="primary" onClick={handleAddTag} style={{ marginTop: '10px' }}>
+          Add Tag
+        </Button>
         <List>
           {tags.map(tag => (
             <ListItem key={tag.tagId} secondaryAction={

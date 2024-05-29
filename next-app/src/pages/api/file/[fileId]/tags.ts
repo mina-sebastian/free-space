@@ -11,12 +11,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-      const file = await prisma.file.findFirst({
+      const file = await prisma.file.findUnique({
         where: { fileId: String(fileId) },
-        include: { hashFile: { include: { tags: true } } },
+        include: { tags: true },
       });
-
-      
 
       if (!file) {
         return res.status(404).json({ error: 'File not found' });
@@ -28,8 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!tag) {
           tag = await prisma.tag.create({ data: { name: tagName } });
         }
-        await prisma.fileHash.update({
-          where: { hash: file.hash },
+        await prisma.file.update({
+          where: { fileId: file.fileId },
           data: { tags: { connect: { tagId: tag.tagId } } },
         });
 
@@ -41,14 +39,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(404).json({ error: 'Tag not found' });
         }
 
-        await prisma.fileHash.update({
-          where: { hash: file.hash },
+        await prisma.file.update({
+          where: { fileId: file.fileId },
           data: { tags: { disconnect: { tagId: tag.tagId } } },
         });
 
         res.status(200).json({ message: 'Tag removed' });
       }
     } catch (error) {
+      console.log(error);
       res.status(500).json({ error: `Failed to ${action} tag` });
     }
   } else {
