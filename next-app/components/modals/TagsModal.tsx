@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 
 const TagsModal = ({ open, onClose, fileId }) => {
+  console.log("FILE ID",fileId)
   const [tags, setTags] = useState([]);
   const [newTag, setNewTag] = useState('');
 

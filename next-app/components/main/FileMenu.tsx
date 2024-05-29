@@ -133,12 +133,13 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
 
   const handleMenuClick = useCallback((event: React.MouseEvent<HTMLElement>, itemId: string, itemType: 'folder' | 'file', name: string) => {
     dispatch({ type: 'SET_ANCHOR_EL', anchorEl: event.currentTarget });
+    console.log({ itemId, itemType, name })
     dispatch({ type: 'SET_SELECTED_ITEM', selectedItem: { itemId, itemType, name } });
   }, []);
 
   const handleMenuClose = useCallback(() => {
     dispatch({ type: 'SET_ANCHOR_EL', anchorEl: null });
-    dispatch({ type: 'SET_SELECTED_ITEM', selectedItem: null });
+    // dispatch({ type: 'SET_SELECTED_ITEM', selectedItem: null });
   }, []);
 
   const handleRenameItem = useCallback(() => {
@@ -220,6 +221,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
   });
 
   const handleTagsModalOpen = useCallback(() => {
+    // console.log(state.selectedItem)
     setTagsModalOpen(true);
   }, []);
 
@@ -326,7 +328,7 @@ const MemoizedListItem = memo(({ folder, file, state, dispatch, canEdit, handleM
         checked={state.checkedFolders.includes(item.folderId) || state.checkedFiles.includes(item.fileId)}
         onChange={() => dispatch({ type: itemType === 'folder' ? 'TOGGLE_FOLDER' : 'TOGGLE_FILE', folderId: item.folderId, fileId: item.fileId })}
       />
-      <FileCard link={file ? linkId ? `${file.fileId}?q=${linkId}` : file.fileId : ""} itemId={item.folderId || item.fileId} itemType={itemType} name={item.name} onShare={() => modalRef.current?.open()} onMenuClick={(event) => handleMenuClick(event, item.folderId || item.fileId, itemType, item.name)} canEdit={canEdit} />
+      <FileCard link={file ? linkId ? `${file.fileId}?q=${linkId}` : file.fileId : ""} itemId={item.folderId || item.fileId} itemType={itemType} name={item.name} onShare={() => modalRef.current?.open()} onMenuClick={(event) => handleMenuClick(event, itemType == "folder" ? item.folderId : item.fileId, itemType, item.name)} canEdit={canEdit} />
     </ListItem>
   );
 });

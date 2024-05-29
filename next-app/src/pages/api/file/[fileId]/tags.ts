@@ -11,30 +11,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-      const file = await prisma.file.findUnique({
+      const file = await prisma.file.findFirst({
         where: { fileId: String(fileId) },
         include: { hashFile: { include: { tags: true } } },
       });
+
+      
 
       if (!file) {
         return res.status(404).json({ error: 'File not found' });
       }
 
       if (action === 'add') {
-        let tag = await prisma.tag.findUnique({ where: { name: tagName } });
+        let tag = await prisma.tag.findFirst({ where: { name: tagName } });
 
         if (!tag) {
           tag = await prisma.tag.create({ data: { name: tagName } });
         }
-
         await prisma.fileHash.update({
           where: { hash: file.hash },
           data: { tags: { connect: { tagId: tag.tagId } } },
         });
 
-        res.json(tag);
+        res.status(200).json(tag);
       } else if (action === 'remove') {
-        const tag = await prisma.tag.findUnique({ where: { name: tagName } });
+        const tag = await prisma.tag.findFirst({ where: { name: tagName } });
 
         if (!tag) {
           return res.status(404).json({ error: 'Tag not found' });
@@ -45,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           data: { tags: { disconnect: { tagId: tag.tagId } } },
         });
 
-        res.json({ message: 'Tag removed' });
+        res.status(200).json({ message: 'Tag removed' });
       }
     } catch (error) {
       res.status(500).json({ error: `Failed to ${action} tag` });
