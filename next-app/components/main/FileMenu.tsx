@@ -42,9 +42,9 @@ type Action =
   | { type: 'SET_ANCHOR_EL'; anchorEl: HTMLElement | null }
   | { type: 'SET_SELECTED_ITEM'; selectedItem: { itemId: string; itemType: 'folder' | 'file'; name: string } | null }
   | { type: 'CLEAR_CHECKED_FILES' }
-  | { type: 'CLEAR_CHECKED_FOLDERS' }  
-  | { type: 'RESET_SELECT_ALL_FILES' } // Add this line
-  | { type: 'RESET_SELECT_ALL_FOLDERS' }; // Add this line
+  | { type: 'CLEAR_CHECKED_FOLDERS' }
+  | { type: 'RESET_SELECT_ALL_FILES' }
+  | { type: 'RESET_SELECT_ALL_FOLDERS' };
 
 const initialState: State = {
   checkedFolders: [],
@@ -128,7 +128,7 @@ const reducer = (state: State, action: Action): State => {
         ...state,
         checkedFiles: [],
       };
-    case 'CLEAR_CHECKED_FOLDERS': 
+    case 'CLEAR_CHECKED_FOLDERS':
       return {
         ...state,
         checkedFolders: [],
@@ -143,12 +143,12 @@ const reducer = (state: State, action: Action): State => {
         ...state,
         selectAllFolders: false,
       };
-  default:
-    return state;
-}
+    default:
+      return state;
+  }
 };
 
-const findSubfolders = (folderId: string, allFolders: Array<{ folderId: string; name: string }>): string[] => {
+const findSubfolders = (folderId: string, allFolders: Array<{ folderId: string; name: string; parentId?: string }>): string[] => {
   const subfolders: string[] = [];
   const queue = [folderId];
 
@@ -168,12 +168,20 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
   const modalRef = useRef(null);
   const [state, dispatch] = useReducer(reducer, initialState);
   const router = useRouter();
+  const [userFolders, setUserFolders] = useState<Array<{ folderId: string; name: string; parentId?: string }>>([]);
+  const [foldersMenuOpen, setFoldersMenuOpen] = useState(false);
+  const [foldersMenuAnchorEl, setFoldersMenuAnchorEl] = useState<HTMLElement | null>(null);
 
   const currentFolderId = router.query.folderId as string;
+  const currentFolder = folders.find(folder => folder.folderId === currentFolderId);
+  const parentFolderId = currentFolder?.parentId;
 
   useEffect(() => {
     const handleRouteChange = () => {
       dispatch({ type: 'CLEAR_CHECKED_FILES' });
+      dispatch({ type: 'CLEAR_CHECKED_FOLDERS' });
+      dispatch({ type: 'RESET_SELECT_ALL_FILES' });
+      dispatch({ type: 'RESET_SELECT_ALL_FOLDERS' });
     };
 
     router.events.on('routeChangeComplete', handleRouteChange);
@@ -253,18 +261,15 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
 
   const handleDeleteFiles = useCallback(() => {
     if (state.checkedFiles.length === 0) return;
-  
+
     if (window.confirm(`Are you sure you want to delete the selected files?`)) {
-      // Create an array of file IDs to delete
       const fileIdsToDelete = state.checkedFiles;
-  
-      // Send a batch request to delete all files
+
       axios.delete('/api/file/deleteBatch', { data: { fileIds: fileIdsToDelete } })
         .then(response => {
           console.log('Files deleted successfully:', response.data);
           dispatch({ type: 'CLEAR_CHECKED_FILES' });
           dispatch({ type: 'RESET_SELECT_ALL_FILES' });
-          // Reload the page or update the file list
           router.replace(router.asPath);
         })
         .catch(error => {
@@ -274,15 +279,12 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
     handleMenuClose();
   }, [state.checkedFiles, router, handleMenuClose]);
 
-
-
-
   const handleDeleteFolders = useCallback(() => {
     if (state.checkedFolders.length === 0) return;
-  
+
     if (window.confirm(`Are you sure you want to delete the selected folders?`)) {
       const folderIdsToDelete = state.checkedFolders;
-  
+
       axios.delete('/api/folder/deleteBatch', { data: { folderIds: folderIdsToDelete } })
         .then(response => {
           console.log('Folders deleted successfully:', response.data);
@@ -297,9 +299,66 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
     handleMenuClose();
   }, [state.checkedFolders, router, handleMenuClose]);
 
+  const handleOpenFoldersMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setFoldersMenuOpen(true);
+    setFoldersMenuAnchorEl(event.currentTarget);
+  };
 
+  const handleCloseFoldersMenu = () => {
+    setFoldersMenuOpen(false);
+  };
 
+  const handleMoveFileToFolder = async (destinationFolderId: string) => {
+    try {
+      const response = await axios.put('/api/file/moveBatch', {
+        fileIds: state.checkedFiles,
+        destinationFolderId,
+      });
+      console.log('Files moved successfully:', response.data);
+      dispatch({ type: 'CLEAR_CHECKED_FILES' });
+      dispatch({ type: 'RESET_SELECT_ALL_FILES' });
+      router.replace(router.asPath);
+    } catch (error) {
+      console.error('Error moving files:', error);
+    }
+    handleCloseFoldersMenu();
+  };
 
+  const handleMoveFolders = useCallback(async (destinationFolderId: string) => {
+    if (state.checkedFolders.length === 0) return;
+
+    try {
+      await axios.put('/api/folder/moveBatch', {
+        folderIds: state.checkedFolders,
+        destinationFolderId,
+      });
+      console.log('Folders moved successfully');
+      dispatch({ type: 'CLEAR_CHECKED_FOLDERS' });
+      dispatch({ type: 'RESET_SELECT_ALL_FOLDERS' });
+      router.replace(router.asPath);
+    } catch (error) {
+      console.error('Error moving folders:', error);
+    }
+  }, [state.checkedFolders, router]);
+
+  const availableDestinationFolders = userFolders.filter(folder => {
+    const allSubfolders = state.checkedFolders.flatMap(checkedFolderId => findSubfolders(checkedFolderId, userFolders));
+    const isInCurrentOrParentFolder = folder.parentId === currentFolderId || folder.parentId === parentFolderId;
+    const isBinFolder = folder.name.toLowerCase() === 'bin';
+    return (!state.checkedFolders.includes(folder.folderId) && !allSubfolders.includes(folder.folderId)) && (isInCurrentOrParentFolder || isBinFolder);
+  });
+
+  useEffect(() => {
+    const fetchUserFolders = async () => {
+      try {
+        const response = await axios.get('/api/folder/getFolders');
+        setUserFolders(response.data.folders);
+      } catch (error) {
+        console.error('Error fetching user folders:', error);
+      }
+    };
+    fetchUserFolders();
+  }, []);
 
   const filteredFiles = files.filter(file => file.name.toLowerCase().includes(state.searchQuery.toLowerCase()));
   const filteredFolders = folders.filter(folder => folder.name.toLowerCase().includes(state.searchQuery.toLowerCase()));
@@ -320,161 +379,6 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
     return 0;
   });
 
-  const [foldersMenuOpen, setFoldersMenuOpen] = useState(false);
-  const [foldersMenuAnchorEl, setFoldersMenuAnchorEl] = useState<HTMLElement | null>(null);
-  const [userFolders, setUserFolders] = useState<Array<{ folderId: string; name: string }>>([]);
-
-  useEffect(() => {
-    const fetchUserFolders = async () => {
-      try {
-        const response = await axios.get('/api/folder/getFolders');
-        setUserFolders(response.data.folders);
-      } catch (error) {
-        console.error('Error fetching user folders:', error);
-      }
-    };
-    fetchUserFolders();
-  }, []);
-
-
-  
-  
-  
-  // Handle closing folders menu
-  const handleCloseFoldersMenu = () => {
-    setFoldersMenuOpen(false);
-  };
-
-
-
-
-
-
-
-
-
-  const findSubfolders = (folderId: string, allFolders: Array<{ folderId: string; name: string; parentId?: string }>): string[] => {
-    const subfolders: string[] = [];
-    const queue = [folderId];
-  
-    while (queue.length > 0) {
-      const currentFolderId = queue.shift()!;
-      const children = allFolders.filter(folder => folder.parentId === currentFolderId);
-      children.forEach(child => {
-        subfolders.push(child.folderId);
-        queue.push(child.folderId);
-      });
-    }
-  
-    return subfolders;
-  };
-  
-  const handleOpenFoldersMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setFoldersMenuOpen(true);
-    setFoldersMenuAnchorEl(event.currentTarget);
-  };
-  
-  const handleMoveFolders = useCallback(async (destinationFolderId: string) => {
-    if (state.checkedFolders.length === 0) return;
-  
-    try {
-      await axios.put('/api/folder/moveBatch', {
-        folderIds: state.checkedFolders,
-        destinationFolderId,
-      });
-      console.log('Folders moved successfully');
-      dispatch({ type: 'CLEAR_CHECKED_FOLDERS' });
-      dispatch({ type: 'RESET_SELECT_ALL_FOLDERS' });
-      router.replace(router.asPath);
-    } catch (error) {
-      console.error('Error moving folders:', error);
-    }
-  }, [state.checkedFolders, router]);
-  
-  const availableDestinationFolders = userFolders.filter(folder => {
-    const subfolders = state.checkedFolders.flatMap(checkedFolderId => findSubfolders(checkedFolderId, userFolders));
-    return !state.checkedFolders.includes(folder.folderId) && !subfolders.includes(folder.folderId);
-  });
-  
-  // Render method
-  
-  <Menu
-    id="folders-menu"
-    anchorEl={foldersMenuAnchorEl}
-    open={foldersMenuOpen}
-    onClose={handleCloseFoldersMenu}
-  >
-    {availableDestinationFolders
-      .filter(folder => folder.folderId !== currentFolderId) // Exclude the current folder
-      .map(folder => (
-        <MenuItem key={folder.folderId} onClick={() => handleMoveFolders(folder.folderId)}>
-          {folder.name}
-        </MenuItem>
-      ))}
-  </Menu>
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-  const handleMoveFileToFolder = async (destinationFolderId: string) => {
-    try {
-      // Send a batch request to move files
-      const response = await axios.put('/api/file/moveBatch', {
-        fileIds: state.checkedFiles,
-        destinationFolderId
-      });
-      console.log('Files moved successfully:', response.data);
-      dispatch({ type: 'CLEAR_CHECKED_FILES' });
-      dispatch({ type: 'RESET_SELECT_ALL_FOLDERS' });
-      // Reload the page or update the file list
-      router.replace(router.asPath);
-    } catch (error) {
-      console.error('Error moving files:', error);
-    }
-  
-    // Close the folders menu
-    handleCloseFoldersMenu();
-  };
-  
-  
-
-
-  // Existing effect to reset state on route change
-  useEffect(() => {
-    const handleRouteChange = () => {
-      dispatch({ type: 'CLEAR_CHECKED_FILES' });
-      dispatch({ type: 'CLEAR_CHECKED_FOLDERS' });
-      dispatch({ type: 'RESET_SELECT_ALL_FILES' });
-      dispatch({ type: 'RESET_SELECT_ALL_FOLDERS' });
-    };
-
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => {
-      router.events.off('routeChangeComplete', handleRouteChange);
-    };
-  }, [router.events])
-
-
-
   return (
     <div>
       <LinkGenerationModal ref={modalRef} />
@@ -487,8 +391,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
         />
         {state.checkedFolders.length > 0 && (
           <>
-      
-            <IconButton aria-label="delete" onClick={handleDeleteFolders}> 
+            <IconButton aria-label="delete" onClick={handleDeleteFolders}>
               <DeleteIcon />
             </IconButton>
             <IconButton aria-label="move" onClick={handleOpenFoldersMenu}>
