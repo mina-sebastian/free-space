@@ -148,22 +148,6 @@ const reducer = (state: State, action: Action): State => {
   }
 };
 
-const findSubfolders = (folderId: string, allFolders: Array<{ folderId: string; name: string; parentId?: string }>): string[] => {
-  const subfolders: string[] = [];
-  const queue = [folderId];
-
-  while (queue.length > 0) {
-    const currentFolderId = queue.shift()!;
-    const children = allFolders.filter(folder => folder.parentId === currentFolderId);
-    children.forEach(child => {
-      subfolders.push(child.folderId);
-      queue.push(child.folderId);
-    });
-  }
-
-  return subfolders;
-};
-
 const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) => {
   const modalRef = useRef(null);
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -171,6 +155,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
   const [userFolders, setUserFolders] = useState<Array<{ folderId: string; name: string; parentId?: string }>>([]);
   const [foldersMenuOpen, setFoldersMenuOpen] = useState(false);
   const [foldersMenuAnchorEl, setFoldersMenuAnchorEl] = useState<HTMLElement | null>(null);
+  const [availableDestinationFolders, setAvailableDestinationFolders] = useState<Array<{ folderId: string; name: string }>>([]);
 
   const currentFolderId = router.query.folderId as string;
 
@@ -187,6 +172,43 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
       router.events.off('routeChangeComplete', handleRouteChange);
     };
   }, [router.events]);
+
+  useEffect(() => {
+    const fetchUserFolders = async () => {
+      try {
+        const response = await axios.get('/api/folder/getFolders');
+        setUserFolders(response.data.folders);
+      } catch (error) {
+        console.error('Error fetching user folders:', error);
+      }
+    };
+    fetchUserFolders();
+  }, []);
+
+  useEffect(() => {
+    const fetchNeighboringFolders = async (folderId: string) => {
+      try {
+        const response = await axios.get(`/api/folder/getNeighboringFolders`, {
+          params: { folderId }
+        });
+        setAvailableDestinationFolders(response.data.folders);
+      } catch (error) {
+        console.error('Error fetching neighboring folders:', error);
+        setAvailableDestinationFolders([]);
+      }
+    };
+
+    if (state.checkedFolders.length > 0) {
+      fetchNeighboringFolders(state.checkedFolders[0]);
+    } else if (state.checkedFiles.length > 0) {
+      const parentFolderId = files.find(file => file.fileId === state.checkedFiles[0])?.folderId;
+      if (parentFolderId) {
+        fetchNeighboringFolders(parentFolderId);
+      }
+    } else {
+      setAvailableDestinationFolders(userFolders);
+    }
+  }, [state.checkedFolders, state.checkedFiles, userFolders, files]);
 
   const handleMenuClick = useCallback((event: React.MouseEvent<HTMLElement>, itemId: string, itemType: 'folder' | 'file', name: string) => {
     dispatch({ type: 'SET_ANCHOR_EL', anchorEl: event.currentTarget });
@@ -338,23 +360,6 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
       console.error('Error moving folders:', error);
     }
   }, [state.checkedFolders, router]);
-
-  const availableDestinationFolders = userFolders.filter(folder => {
-    const allSubfolders = state.checkedFolders.flatMap(checkedFolderId => findSubfolders(checkedFolderId, userFolders));
-    return !state.checkedFolders.includes(folder.folderId) && !allSubfolders.includes(folder.folderId);
-  });
-
-  useEffect(() => {
-    const fetchUserFolders = async () => {
-      try {
-        const response = await axios.get('/api/folder/getFolders');
-        setUserFolders(response.data.folders);
-      } catch (error) {
-        console.error('Error fetching user folders:', error);
-      }
-    };
-    fetchUserFolders();
-  }, []);
 
   const filteredFiles = files.filter(file => file.name.toLowerCase().includes(state.searchQuery.toLowerCase()));
   const filteredFolders = folders.filter(folder => folder.name.toLowerCase().includes(state.searchQuery.toLowerCase()));
