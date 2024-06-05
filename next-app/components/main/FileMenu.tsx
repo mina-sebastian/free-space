@@ -1,8 +1,7 @@
 import React, { useRef, useReducer, useCallback, useState, memo, useEffect } from 'react';
-import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem, Select, FormControl, InputLabel, Button  } from '@mui/material';
+import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import FileCard from '../cards/FileCard';
 import LinkGenerationModal from '../modals/LinkGenerationModal';
-import TagsModal from '../modals/TagsModal'; // Import the TagsModal component
 import DeleteIcon from '@mui/icons-material/Delete';
 import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
 import { useRouter } from 'next/router';
@@ -10,7 +9,7 @@ import axios from 'axios';
 import SearchBar from './SearchBar';
 
 interface FileMenuProps {
-  folders: Array<{ folderId: string; name: string }>;
+  folders: Array<{ folderId: string; name: string; parentId?: string }>;
   files: Array<{ fileId: string; name: string; hashFile: { size: number } }>;
   canEdit: boolean;
   linkId: string;
@@ -42,7 +41,10 @@ type Action =
   | { type: 'SET_SEARCH_QUERY'; searchQuery: string }
   | { type: 'SET_ANCHOR_EL'; anchorEl: HTMLElement | null }
   | { type: 'SET_SELECTED_ITEM'; selectedItem: { itemId: string; itemType: 'folder' | 'file'; name: string } | null }
-  | { type: 'CLEAR_CHECKED_FILES' };
+  | { type: 'CLEAR_CHECKED_FILES' }
+  | { type: 'CLEAR_CHECKED_FOLDERS' }
+  | { type: 'RESET_SELECT_ALL_FILES' }
+  | { type: 'RESET_SELECT_ALL_FOLDERS' };
 
 const initialState: State = {
   checkedFolders: [],
@@ -126,20 +128,58 @@ const reducer = (state: State, action: Action): State => {
         ...state,
         checkedFiles: [],
       };
+    case 'CLEAR_CHECKED_FOLDERS':
+      return {
+        ...state,
+        checkedFolders: [],
+      };
+    case 'RESET_SELECT_ALL_FILES':
+      return {
+        ...state,
+        selectAllFiles: false,
+      };
+    case 'RESET_SELECT_ALL_FOLDERS':
+      return {
+        ...state,
+        selectAllFolders: false,
+      };
     default:
       return state;
   }
 };
 
+const findSubfolders = (folderId: string, allFolders: Array<{ folderId: string; name: string; parentId?: string }>): string[] => {
+  const subfolders: string[] = [];
+  const queue = [folderId];
+
+  while (queue.length > 0) {
+    const currentFolderId = queue.shift()!;
+    const children = allFolders.filter(folder => folder.parentId === currentFolderId);
+    children.forEach(child => {
+      subfolders.push(child.folderId);
+      queue.push(child.folderId);
+    });
+  }
+
+  return subfolders;
+};
+
 const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) => {
   const modalRef = useRef(null);
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [tagsModalOpen, setTagsModalOpen] = useState<boolean>(false);
   const router = useRouter();
+  const [userFolders, setUserFolders] = useState<Array<{ folderId: string; name: string; parentId?: string }>>([]);
+  const [foldersMenuOpen, setFoldersMenuOpen] = useState(false);
+  const [foldersMenuAnchorEl, setFoldersMenuAnchorEl] = useState<HTMLElement | null>(null);
+
+  const currentFolderId = router.query.folderId as string;
 
   useEffect(() => {
     const handleRouteChange = () => {
       dispatch({ type: 'CLEAR_CHECKED_FILES' });
+      dispatch({ type: 'CLEAR_CHECKED_FOLDERS' });
+      dispatch({ type: 'RESET_SELECT_ALL_FILES' });
+      dispatch({ type: 'RESET_SELECT_ALL_FOLDERS' });
     };
 
     router.events.on('routeChangeComplete', handleRouteChange);
@@ -150,13 +190,12 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
 
   const handleMenuClick = useCallback((event: React.MouseEvent<HTMLElement>, itemId: string, itemType: 'folder' | 'file', name: string) => {
     dispatch({ type: 'SET_ANCHOR_EL', anchorEl: event.currentTarget });
-    console.log({ itemId, itemType, name })
     dispatch({ type: 'SET_SELECTED_ITEM', selectedItem: { itemId, itemType, name } });
   }, []);
 
   const handleMenuClose = useCallback(() => {
     dispatch({ type: 'SET_ANCHOR_EL', anchorEl: null });
-    // dispatch({ type: 'SET_SELECTED_ITEM', selectedItem: null });
+    dispatch({ type: 'SET_SELECTED_ITEM', selectedItem: null });
   }, []);
 
   const handleRenameItem = useCallback(() => {
@@ -220,16 +259,15 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
 
   const handleDeleteFiles = useCallback(() => {
     if (state.checkedFiles.length === 0) return;
-  
+
     if (window.confirm(`Are you sure you want to delete the selected files?`)) {
-      // Create an array of file IDs to delete
       const fileIdsToDelete = state.checkedFiles;
-  
-      // Send a batch request to delete all files
+
       axios.delete('/api/file/deleteBatch', { data: { fileIds: fileIdsToDelete } })
         .then(response => {
           console.log('Files deleted successfully:', response.data);
-          // Reload the page or update the file list
+          dispatch({ type: 'CLEAR_CHECKED_FILES' });
+          dispatch({ type: 'RESET_SELECT_ALL_FILES' });
           router.replace(router.asPath);
         })
         .catch(error => {
@@ -238,6 +276,85 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
     }
     handleMenuClose();
   }, [state.checkedFiles, router, handleMenuClose]);
+
+  const handleDeleteFolders = useCallback(() => {
+    if (state.checkedFolders.length === 0) return;
+
+    if (window.confirm(`Are you sure you want to delete the selected folders?`)) {
+      const folderIdsToDelete = state.checkedFolders;
+
+      axios.delete('/api/folder/deleteBatch', { data: { folderIds: folderIdsToDelete } })
+        .then(response => {
+          console.log('Folders deleted successfully:', response.data);
+          dispatch({ type: 'CLEAR_CHECKED_FOLDERS' });
+          dispatch({ type: 'RESET_SELECT_ALL_FOLDERS' });
+          router.replace(router.asPath);
+        })
+        .catch(error => {
+          console.error('Error deleting folders:', error);
+        });
+    }
+    handleMenuClose();
+  }, [state.checkedFolders, router, handleMenuClose]);
+
+  const handleOpenFoldersMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setFoldersMenuOpen(true);
+    setFoldersMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseFoldersMenu = () => {
+    setFoldersMenuOpen(false);
+  };
+
+  const handleMoveFileToFolder = async (destinationFolderId: string) => {
+    try {
+      const response = await axios.put('/api/file/moveBatch', {
+        fileIds: state.checkedFiles,
+        destinationFolderId,
+      });
+      console.log('Files moved successfully:', response.data);
+      dispatch({ type: 'CLEAR_CHECKED_FILES' });
+      dispatch({ type: 'RESET_SELECT_ALL_FILES' });
+      router.replace(router.asPath);
+    } catch (error) {
+      console.error('Error moving files:', error);
+    }
+    handleCloseFoldersMenu();
+  };
+
+  const handleMoveFolders = useCallback(async (destinationFolderId: string) => {
+    if (state.checkedFolders.length === 0) return;
+
+    try {
+      await axios.put('/api/folder/moveBatch', {
+        folderIds: state.checkedFolders,
+        destinationFolderId,
+      });
+      console.log('Folders moved successfully');
+      dispatch({ type: 'CLEAR_CHECKED_FOLDERS' });
+      dispatch({ type: 'RESET_SELECT_ALL_FOLDERS' });
+      router.replace(router.asPath);
+    } catch (error) {
+      console.error('Error moving folders:', error);
+    }
+  }, [state.checkedFolders, router]);
+
+  const availableDestinationFolders = userFolders.filter(folder => {
+    const allSubfolders = state.checkedFolders.flatMap(checkedFolderId => findSubfolders(checkedFolderId, userFolders));
+    return !state.checkedFolders.includes(folder.folderId) && !allSubfolders.includes(folder.folderId);
+  });
+
+  useEffect(() => {
+    const fetchUserFolders = async () => {
+      try {
+        const response = await axios.get('/api/folder/getFolders');
+        setUserFolders(response.data.folders);
+      } catch (error) {
+        console.error('Error fetching user folders:', error);
+      }
+    };
+    fetchUserFolders();
+  }, []);
 
   const filteredFiles = files.filter(file => file.name.toLowerCase().includes(state.searchQuery.toLowerCase()));
   const filteredFolders = folders.filter(folder => folder.name.toLowerCase().includes(state.searchQuery.toLowerCase()));
@@ -258,63 +375,9 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
     return 0;
   });
 
-  const handleTagsModalOpen = useCallback(() => {
-    // console.log(state.selectedItem)
-    setTagsModalOpen(true);
-  }, []);
-
-  const handleTagsModalClose = useCallback(() => {
-    setTagsModalOpen(false);
-  }, []);
-  const [foldersMenuOpen, setFoldersMenuOpen] = useState(false);
-  const [foldersMenuAnchorEl, setFoldersMenuAnchorEl] = useState<HTMLElement | null>(null);
-  const [userFolders, setUserFolders] = useState<Array<{ folderId: string; name: string }>>([]);
-
-  useEffect(() => {
-    const fetchUserFolders = async () => {
-      try {
-        const response = await axios.get('/api/folder/getFolders');
-        setUserFolders(response.data.folders);
-      } catch (error) {
-        console.error('Error fetching user folders:', error);
-      }
-    };
-    fetchUserFolders();
-  }, []);
-
-  // Handle opening folders menu
-  const handleOpenFoldersMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setFoldersMenuOpen(true);
-    setFoldersMenuAnchorEl(event.currentTarget);
-  };
-
-  // Handle closing folders menu
-  const handleCloseFoldersMenu = () => {
-    setFoldersMenuOpen(false);
-  };
-
-  const handleMoveFileToFolder = async (destinationFolderId: string) => {
-    try {
-      // Send a batch request to move files
-      const response = await axios.put('/api/file/moveBatch', {
-        fileIds: state.checkedFiles,
-        destinationFolderId
-      });
-      console.log('Files moved successfully:', response.data);
-      // Reload the page or update the file list
-      router.replace(router.asPath);
-    } catch (error) {
-      console.error('Error moving files:', error);
-    }
-  
-    // Close the folders menu
-    handleCloseFoldersMenu();
-  };
-  
   return (
     <div>
       <LinkGenerationModal ref={modalRef} />
-      <TagsModal open={tagsModalOpen} onClose={handleTagsModalClose} fileId={state.selectedItem?.itemId || ''} />
       <SearchBar searchQuery={state.searchQuery} onSearchQueryChange={handleSearchQueryChange} />
       <h2>Folders</h2>
       <Stack direction="row" alignItems="center" spacing={2}>
@@ -324,12 +387,26 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
         />
         {state.checkedFolders.length > 0 && (
           <>
-            <IconButton aria-label="delete">
+            <IconButton aria-label="delete" onClick={handleDeleteFolders}>
               <DeleteIcon />
             </IconButton>
-            <IconButton aria-label="move">
+            <IconButton aria-label="move" onClick={handleOpenFoldersMenu}>
               <DriveFileMoveIcon />
             </IconButton>
+            <Menu
+              id="folders-menu"
+              anchorEl={foldersMenuAnchorEl}
+              open={foldersMenuOpen}
+              onClose={handleCloseFoldersMenu}
+            >
+              {availableDestinationFolders
+                .filter(folder => folder.folderId !== currentFolderId) // Exclude the current folder
+                .map(folder => (
+                  <MenuItem key={folder.folderId} onClick={() => handleMoveFolders(folder.folderId)}>
+                    {folder.name}
+                  </MenuItem>
+                ))}
+            </Menu>
           </>
         )}
         <FormControl variant="outlined" size="small">
@@ -400,11 +477,11 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
           <MemoizedListItem key={file.fileId} file={file} state={state} dispatch={dispatch} canEdit={canEdit} handleMenuClick={handleMenuClick} modalRef={modalRef} linkId={linkId} />
         ))}
       </List>
+
       {!!canEdit && (
         <Menu id="menu" anchorEl={state.anchorEl} open={Boolean(state.anchorEl)} onClose={handleMenuClose}>
           {(router.asPath.startsWith('/f/Home') || canEdit === true) && <MenuItem onClick={handleRenameItem}>Rename</MenuItem>}
           {<MenuItem onClick={handleDeleteItem}>Delete</MenuItem>}
-          {router.asPath.startsWith('/f/Home') && state.selectedItem?.itemType === 'file' && <MenuItem onClick={handleTagsModalOpen}>Tags</MenuItem>}
           {router.asPath.startsWith('/f/Home') && <MenuItem onClick={() => state.selectedItem && modalRef.current?.open(state.selectedItem.itemType, state.selectedItem.itemId, state.selectedItem.name)}>Share</MenuItem>}
         </Menu>
       )}
@@ -422,8 +499,7 @@ const MemoizedListItem = memo(({ folder, file, state, dispatch, canEdit, handleM
         checked={state.checkedFolders.includes(item.folderId) || state.checkedFiles.includes(item.fileId)}
         onChange={() => dispatch({ type: itemType === 'folder' ? 'TOGGLE_FOLDER' : 'TOGGLE_FILE', folderId: item.folderId, fileId: item.fileId })}
       />
-
-      <FileCard link={file ? linkId ? `${file.fileId}?q=${linkId}` : file.fileId : ""} itemId={item.folderId || item.fileId} itemType={itemType} name={item.name} onShare={() => modalRef.current?.open()} onMenuClick={(event) => handleMenuClick(event, itemType == "folder" ? item.folderId : item.fileId, itemType, item.name)} canEdit={canEdit} />
+      <FileCard link={file ? (linkId ? `${file.fileId}?q=${linkId}` : file.fileId) : ""} itemId={item.folderId || item.fileId} itemType={itemType} name={item.name} onShare={() => modalRef.current?.open()} onMenuClick={(event) => handleMenuClick(event, item.folderId || item.fileId, itemType, item.name)} canEdit={canEdit} />
     </ListItem>
   );
 });
