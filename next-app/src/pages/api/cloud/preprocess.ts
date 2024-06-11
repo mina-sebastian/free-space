@@ -77,12 +77,29 @@ export default async function handler(
     }
     catch(e){
       // console.log(e);
+      //get tags list for the file
+      const tagsFH = await prisma.fileHash.findUnique({
+        where: {
+          hash: file.hash
+        },
+        select: {
+          tags: {
+            select: {
+              name: true
+            }
+          }
+        }
+      });
+      //create the file with the list of the tags
       await prisma.file.create({
         data: {
           name: file.name,
           hash: file.hash,
           userId: session.user.id,
-          folderId: outerFolderId
+          folderId: outerFolderId,
+          tags: {
+            connect: tagsFH.tags
+          }
         }
       });
       alreadyUploaded.push(file.id);

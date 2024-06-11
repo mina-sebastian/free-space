@@ -4,7 +4,10 @@ import prisma from '../../../../../libs/prismadb';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
-    const { action, fileId, tagName } = req.body;
+    const { action, fileId, tagNameConst } = req.body;
+
+    // Remove all special characters and convert to lowercase
+    const tagName = tagNameConst.toLowerCase().replace(/[^a-z]/g, '').trim();
 
     if (!action || !['add', 'remove'].includes(action)) {
       return res.status(400).json({ error: 'Invalid action' });
@@ -28,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         await prisma.file.update({
           where: { fileId: file.fileId },
-          data: { tags: { connect: { tagId: tag.tagId } } },
+          data: { tags: { connect: { name: tag.name } } },
         });
 
         res.status(200).json(tag);
@@ -41,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         await prisma.file.update({
           where: { fileId: file.fileId },
-          data: { tags: { disconnect: { tagId: tag.tagId } } },
+          data: { tags: { disconnect: { name: tag.name } } },
         });
 
         res.status(200).json({ message: 'Tag removed' });

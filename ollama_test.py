@@ -4,11 +4,6 @@ import requests
 import ollama
 from ollama import Client
 
-def encode_image_to_base64(image_path):
-    """Encode the image to base64 format."""
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
-
 def post_request_ollama(client, model, prompt, image_path):
     """Send a request to the Ollama API using the client."""
     response = client.chat(

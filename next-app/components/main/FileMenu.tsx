@@ -499,7 +499,7 @@ const MemoizedListItem = memo(({ folder, file, state, dispatch, canEdit, handleM
         checked={state.checkedFolders.includes(item.folderId) || state.checkedFiles.includes(item.fileId)}
         onChange={() => dispatch({ type: itemType === 'folder' ? 'TOGGLE_FOLDER' : 'TOGGLE_FILE', folderId: item.folderId, fileId: item.fileId })}
       />
-      <FileCard link={file ? (linkId ? `${file.fileId}?q=${linkId}` : file.fileId) : ""} itemId={item.folderId || item.fileId} itemType={itemType} name={item.name} onShare={() => modalRef.current?.open()} onMenuClick={(event) => handleMenuClick(event, item.folderId || item.fileId, itemType, item.name)} canEdit={canEdit} />
+      <FileCard link={file ? (linkId ? `${file.fileId}?q=${linkId}` : file.fileId) : ""} itemId={itemType === 'folder' ? item.folderId : item.fileId} itemType={itemType} name={item.name} onShare={() => modalRef.current?.open()} onMenuClick={(event) => handleMenuClick(event, itemType === 'folder' ? item.folderId : item.fileId, itemType, item.name)} canEdit={canEdit} />
     </ListItem>
   );
 });

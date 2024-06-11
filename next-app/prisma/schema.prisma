@@ -76,7 +76,6 @@ model File {
   hash      String
 
   tags      Tag[]
-  autoTag   Boolean @default(false)
 }
 
 model FileHash {
@@ -86,6 +85,9 @@ model FileHash {
   size   Float
 
   files  File[]
+
+  tags   Tag[]
+  tagged Boolean  @default(false)
 }
 
 model Link {
@@ -100,9 +102,10 @@ model Link {
 }
 
 model Tag {
-  tagId   String   @id @default(cuid())
-  name    String
+  name    String   @id @default(cuid())
+
   file    File[]
+  hash    FileHash[]
 }
 
 enum CanSee {
