@@ -3,31 +3,33 @@ import prisma from '../../../../libs/prismadb';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 
-
+// Define type for folder data
 type FolderType = {
   folderId: string;
   name: string;
   outerFolderId?: string | null;
 };
 
+// Define response data type
 type ResponseData = {
   folders: FolderType[];
 };
 
+// Default API handler function
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<ResponseData | {message: string}>
+  res: NextApiResponse<ResponseData | {message: string}> // Response type that includes a message string and optionally a folder
 ) {
-  const session = await getServerSession(req, res, authOptions);
+  const session = await getServerSession(req, res, authOptions); // Retrieve the session using getServerSession with the provided authOptions
   if (!session) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    return res.status(401).json({ message: 'Unauthorized' }); // Return unauthorized if no session found
   }
 
-  const user = await session.user;
+  const user = await session.user; // Extract user information from the session
   
-  const { parent } = req.body;
+  const { parent } = req.body; // Extract parent folder id from request body
 
-  const folders = await prisma.folder.findMany({
+  const folders = await prisma.folder.findMany({ // Retrieve all folders associated with the user
     select: {
         folderId: true,
         name: true,

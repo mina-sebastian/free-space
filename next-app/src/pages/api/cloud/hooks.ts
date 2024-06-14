@@ -58,37 +58,40 @@ export default async function (
 
     const hookRequest: HookRequest = req.body;
 
+    // Switch based on the type of hook request
     switch (hookRequest.Type) {
       case 'pre-create':
-        await handlePreCreate(hookRequest, hookResponse);
+        await handlePreCreate(hookRequest, hookResponse); // Handle pre-create hook type
         break;
       case 'post-finish':
-        await handlePostFinish(hookRequest);
+        await handlePostFinish(hookRequest); // Handle post-finish hook type
         break;
       case 'post-terminate':
-        await handlePostDelete(hookRequest);
+        await handlePostDelete(hookRequest); // Handle post-terminate hook type
       default:
-        hookResponse.RejectUpload = true;
-        hookResponse.HTTPResponse.StatusCode = 200;
-        return res.status(200).json(hookResponse);
+        hookResponse.RejectUpload = true; // Reject the upload if the hook type is not recognized
+        hookResponse.HTTPResponse.StatusCode = 200; // Set the status code to 200
+        return res.status(200).json(hookResponse); // Return the response to the tusd server
     }
 
-    res.status(200).json(hookResponse);
+    res.status(200).json(hookResponse); // Return the response to the tusd server
   } catch (error) {
     console.error('Error processing hook:', error);
-    hookResponse.RejectUpload = true;
-    hookResponse.HTTPResponse.StatusCode = error.message === 'Method Not Allowed' ? 405 : 400;
-    hookResponse.HTTPResponse.Body = error.message;
-    res.status(hookResponse.HTTPResponse.StatusCode).json(hookResponse);
+    hookResponse.RejectUpload = true; // Reject the upload if an error occurs
+    hookResponse.HTTPResponse.StatusCode = error.message === 'Method Not Allowed' ? 405 : 400; // Set the status code based on the error
+    hookResponse.HTTPResponse.Body = error.message; // Set the error message in the response body
+    res.status(hookResponse.HTTPResponse.StatusCode).json(hookResponse); // Return the response to the tusd server
   }
 }
 
+// Function to handle post-terminate hook type
 async function handlePostDelete(hookRequest: HookRequest) {
-  const { MetaData } = hookRequest.Event.Upload;
+  const { MetaData } = hookRequest.Event.Upload; // Destructure the MetaData from the hook request
 
   // console.log("DELETIING");
   // console.log(hookRequest);
 
+  // Find the user based on the token in the MetaData
   const user = await prisma.user.findUnique({
     where: {
       id: MetaData.tkn
@@ -111,26 +114,26 @@ async function handlePostDelete(hookRequest: HookRequest) {
   // console.log(rez);
 }
 
-/**
- * Handle pre-create hook type by validating user and upload metadata.
- */
+// Function to handle pre-create hook type
 async function handlePreCreate(hookRequest: HookRequest, hookResponse: HookResponse) {
-  const metaData = hookRequest.Event.Upload.MetaData;
-  const isValid = metaData && 'filename' in metaData;
+  const metaData = hookRequest.Event.Upload.MetaData; // Destructure the MetaData from the hook request
+  const isValid = metaData && 'filename' in metaData; // Check if the MetaData contains a filename
 
+  // Get the user based on the token in the MetaData
   const user = await prisma.user.findUnique({
     where: {
       id: metaData.tkn
     }
   });
 
-
+  // Check if the user is authorized and a filename is provided
   if (!user) {
     throw new Error('Not Authorized');
   } else if (!isValid) {
     throw new Error('No filename provided');
   } else {
     
+    // Check if the file already exists in the system
     const hashedFs = await prisma.fileHash.count({
       where: {
         hash: metaData.hash,
@@ -139,18 +142,18 @@ async function handlePreCreate(hookRequest: HookRequest, hookResponse: HookRespo
         }
       }
     });
-    
+  
     if(hashedFs > 0){
-      hookResponse.RejectUpload = true;
-      hookResponse.HTTPResponse.StatusCode = 201;
+      hookResponse.RejectUpload = true; // Reject the upload if the file already exists
+      hookResponse.HTTPResponse.StatusCode = 201; 
       hookResponse.HTTPResponse.Body = "File already in the system.";
       return;
     }
 
     
-    
+    // Set the response to change the file info
     hookResponse.ChangeFileInfo = {
-      ID: metaData.gvnid,
+      ID: metaData.gvnid, // Set the ID to the gvnid in the MetaData
       MetaData: {
         tkn: metaData.tkn,
         folderId: metaData.folderId,
@@ -162,12 +165,11 @@ async function handlePreCreate(hookRequest: HookRequest, hookResponse: HookRespo
   }
 }
 
-/**
- * Handle post-finish hook type by logging the upload completion and storing the file details in the database.
- */
+// Function to handle post-finish hook type
 async function handlePostFinish(hookRequest: HookRequest) {
-  const { ID, Size, MetaData } = hookRequest.Event.Upload;
+  const { ID, Size, MetaData } = hookRequest.Event.Upload; // Destructure the ID, Size, and MetaData from the hook request
 
+  // Find the user based on the token in the MetaData
   const user = await prisma.user.findUnique({
     where: {
       id: MetaData.tkn
@@ -181,6 +183,7 @@ async function handlePostFinish(hookRequest: HookRequest) {
     throw new Error('Not Authorized');
   }
 
+  // Find the folder based on the folderId in the MetaData
   const folder = await prisma.folder.findFirst({
     where: {
       folderId: MetaData.folderId,
@@ -200,6 +203,7 @@ async function handlePostFinish(hookRequest: HookRequest) {
     throw new Error('Folder not found');
   }
 
+  // Create the file hash in the database
   await prisma.fileHash.update({
     where: {
       hash: MetaData.hash,
@@ -209,6 +213,7 @@ async function handlePostFinish(hookRequest: HookRequest) {
     }
   });
 
+  // Create the file in the database
   await prisma.file.create({
     data: {
       userId: user.id,

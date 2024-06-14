@@ -9,28 +9,31 @@ export const config = {
   },
 }
 
+// Type definitions for the file object
 type FileType = {
   fileId: string; 
   name: string;
   url: string;
 };
 
+// Type definitions for the response data
 type ResponseData = {
   file?: FileType;
   message?: string;
 };
 
+// API handler to download a file
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
 ) {
-  const { fileId } = req.query;
+  const { fileId } = req.query; // Extract fileId from request query parameters
 
-  if (!fileId || typeof fileId !== 'string') {
+  if (!fileId || typeof fileId !== 'string') { // Check if fileId is missing or invalid
     return res.status(400).json({ message: 'Bad Request: Missing or invalid fileId' });
   }
 
-  let file = await prisma.file.findUnique({
+  let file = await prisma.file.findUnique({ // Find the file by fileId
     where: { fileId },
     include: {
       hashFile: true,
@@ -38,7 +41,7 @@ export default async function handler(
   });
 
   if(!file){
-    const link_file = await prisma.link.findUnique({
+    const link_file = await prisma.link.findUnique({ // Find the file by fileId
       where: { path: fileId },
       select:{
         file: {
@@ -56,9 +59,10 @@ export default async function handler(
     return res.status(404).json({ message: 'File not found' });
   }
 
-  const fileUrl = getFileUrl(file.hashFile.path);
+  const fileUrl = getFileUrl(file.hashFile.path); // Get the file URL
 
   try {
+    // Fetch the file from the TUS server
     const response = await axios.get(fileUrl, {
       headers: {
         'Tus-Resumable': '1.0.0'
@@ -67,7 +71,7 @@ export default async function handler(
     });
 
     console.log(response.headers)
-    for(const key in response.headers){
+    for(const key in response.headers){ // Set the headers in the response
       res.setHeader(key, response.headers[key])
     }
     res.status(response.status).send(response.data);
@@ -78,5 +82,5 @@ export default async function handler(
 }
 
 function getFileUrl(filePath: string): string {
-  return `http://tusd:8080/files/${filePath}`;
+  return `http://tusd:8080/files/${filePath}`; // Return the file URL
 }

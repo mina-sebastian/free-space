@@ -7,14 +7,14 @@ import { CssBaseline } from "@mui/material";
 import { Ubuntu } from "next/font/google";
 import { QueryClient, QueryClientProvider } from 'react-query';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient(); // Create a new instance of QueryClient
 
-const font = Ubuntu({
+const font = Ubuntu({ // Define the Ubuntu font
   weight: '500',
   subsets: ['latin'],
 });
 
-const theme = responsiveFontSizes(createTheme({
+const theme = responsiveFontSizes(createTheme({ // Create a responsive theme with Ubuntu font
   spacing: 5,
   typography: {
     fontFamily: font.style.fontFamily,
@@ -26,7 +26,7 @@ const theme = responsiveFontSizes(createTheme({
       paper: '#1b074f',
     },
   },
-  components: {
+  components: { // Customize the MUI components
     MuiAppBar: {
       styleOverrides: {
         root: {

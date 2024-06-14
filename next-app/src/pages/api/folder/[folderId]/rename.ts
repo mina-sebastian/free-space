@@ -3,13 +3,14 @@ import prisma from '../../../../../libs/prismadb';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]';
 
+// API handler to rename a folder
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<{ message: string }>
+  res: NextApiResponse<{ message: string }> // Response data type definition
 ) {
-  const session = await getServerSession(req, res, authOptions);
+  const session = await getServerSession(req, res, authOptions); // Get the session from the request
   if (!session) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    return res.status(401).json({ message: 'Unauthorized' }); // Return unauthorized if no session found
   }
 
   const { folderId } = req.query; // Extract folderId from request query parameters
@@ -27,9 +28,9 @@ export default async function handler(
       },
     });
 
-    res.status(200).json({ message: 'Folder name updated successfully' });
+    res.status(200).json({ message: 'Folder name updated successfully' }); // Respond with a success message
   } catch (error) {
     console.error('Error renaming folder:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: 'Internal Server Error' }); // Return a 500 error response with a specific message
   }
 }

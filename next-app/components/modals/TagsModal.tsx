@@ -3,12 +3,14 @@ import { Modal, Box, Button, List, ListItem, ListItemText, IconButton, TextField
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 
+// Define the TagsModal component
 const TagsModal = ({ open, onClose, fileId }) => {
-  console.log("FILE ID", fileId);
-  const [tags, setTags] = useState([]);
-  const [allTags, setAllTags] = useState([]);
-  const [newTag, setNewTag] = useState('');
+  console.log("FILE ID", fileId); 
+  const [tags, setTags] = useState([]); // State to manage the tags
+  const [allTags, setAllTags] = useState([]); // State to manage all tags
+  const [newTag, setNewTag] = useState(''); // State to manage the new tag
 
+  // Function to fetch tags
   const fetchTags = () => {
     if (fileId) {
       // Fetch existing tags for the file
@@ -23,13 +25,15 @@ const TagsModal = ({ open, onClose, fileId }) => {
     }
   };
 
+  // Fetch tags on component mount
   useEffect(() => {
     fetchTags();
   }, [fileId]);
 
+  // Function to add a new tag
   const handleAddTag = () => {
     if (newTag.trim()) {
-      axios.post(`/api/file/${fileId}/tags`, { action: 'add', fileId, tagName: newTag })
+      axios.post(`/api/file/${fileId}/tags`, { action: 'add', fileId, tagName: newTag }) // Add tag to the file
         .then(response => {
           setTags([...tags, response.data]);
           setNewTag('');
@@ -40,8 +44,9 @@ const TagsModal = ({ open, onClose, fileId }) => {
     }
   };
 
+  // Function to remove a tag
   const handleRemoveTag = (tagName) => {
-    axios.post(`/api/file/${fileId}/tags`, { action: 'remove', fileId, tagName })
+    axios.post(`/api/file/${fileId}/tags`, { action: 'remove', fileId, tagName }) // Remove tag from the file
       .then(response => {
         setTags(tags.filter(tag => tag.name !== tagName));
       })
@@ -64,29 +69,30 @@ const TagsModal = ({ open, onClose, fileId }) => {
         }}
       >
         <h2>Manage Tags</h2>
-        <Autocomplete
+        {/* Autocomplete component for adding new tags */}
+        <Autocomplete 
           freeSolo
-          options={allTags.map(tag => tag.name)}
+          options={allTags.map(tag => tag.name)} // Set the options to all available tags
           value={newTag}
-          onChange={(event, newValue) => setNewTag(newValue)}
-          renderInput={(params) => (
+          onChange={(event, newValue) => setNewTag(newValue)} // Handle change in value
+          renderInput={(params) => ( // Render the input field
             <TextField
-              {...params}
+              {...params} // Pass the input parameters
               label="New Tag"
               variant="outlined"
-              onChange={(e) => setNewTag(e.target.value)}
+              onChange={(e) => setNewTag(e.target.value)} // Handle change in value
               fullWidth
               margin="normal"
             />
           )}
         />
-        <Button variant="contained" color="primary" onClick={handleAddTag} style={{ marginTop: '10px' }}>
+        <Button variant="contained" color="primary" onClick={handleAddTag} style={{ marginTop: '10px' }}> {/* Button to add tag */}
           Add Tag
         </Button>
         <List>
-          {tags.map(tag => (
-            <ListItem key={tag.tagId} secondaryAction={
-              <IconButton edge="end" onClick={() => handleRemoveTag(tag.name)}>
+          {tags.map(tag => ( // Map over the tags
+            <ListItem key={tag.tagId} secondaryAction={ // List item with remove button
+              <IconButton edge="end" onClick={() => handleRemoveTag(tag.name)}> {/* Button to remove tag */}
                 <CloseIcon />
               </IconButton>
             }>

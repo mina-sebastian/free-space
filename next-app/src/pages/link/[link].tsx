@@ -7,7 +7,7 @@ interface LinkProps {
   error?: string;
 }
 
-const LinkPage: NextPage<LinkProps> = ({ data, error }) => {
+const LinkPage: NextPage<LinkProps> = ({ data, error }) => { // Define the LinkPage component
   if (error) {
     return <div>Error: {error}</div>;
   }
@@ -21,13 +21,13 @@ const LinkPage: NextPage<LinkProps> = ({ data, error }) => {
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
+export const getServerSideProps: GetServerSideProps = async (context) => { // Define the getServerSideProps function
   const { link } = context.params!;
   try {
-    const res = await axios.get(`/api/link/${link}`);
-    return { props: { data: res.data.data } };
+    const res = await axios.get(`/api/link/${link}`); // Fetch data from the API endpoint
+    return { props: { data: res.data.data } }; // Return the fetched data as props
   } catch (error) {
-    return { props: { error: error.response?.data?.error || "An unexpected error occurred" } };
+    return { props: { error: error.response?.data?.error || "An unexpected error occurred" } }; // Return an error message if an error occurs
   }
 };
 

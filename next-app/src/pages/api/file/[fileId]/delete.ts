@@ -4,28 +4,30 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]';
 import axios from 'axios';
 
+// Function to send a DELETE request to the Tus server
 const sendDeleteRequest = async (path: string) => {
   let config = {
     headers: {
-      'Tus-Resumable': '1.0.0'
+      'Tus-Resumable': '1.0.0' // Required header for Tus server
     }
   }
   try{
-    const resp = await axios.delete("http://tusd:8080/files/"+path, config);
+    const resp = await axios.delete("http://tusd:8080/files/"+path, config); // Send DELETE request to Tus server
   }catch(e){
     console.log(e);
   }
 }
 
+// Function to find the highest ancestor folder of a given folder
 const findHighestAncestor = async (folderId: string): Promise<any> => {
-  let currentFolder = await prisma.folder.findUnique({
+  let currentFolder = await prisma.folder.findUnique({ // Find the folder by folderId
     where: { folderId },
     include: { outerFolder: true },
   });
 
-  while (currentFolder?.outerFolder) {
-    currentFolder = await prisma.folder.findUnique({
-      where: { folderId: currentFolder.outerFolder.folderId },
+  while (currentFolder?.outerFolder) { // Loop until the outerFolder is null
+    currentFolder = await prisma.folder.findUnique({ // Find the folder by folderId
+      where: { folderId: currentFolder.outerFolder.folderId }, // Get the outerFolder by folderId
       include: { outerFolder: true },
     });
   }
@@ -33,17 +35,19 @@ const findHighestAncestor = async (folderId: string): Promise<any> => {
   return currentFolder;
 };
 
+// API handler to delete a file
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<{ message: string, dels?: any }>
+  res: NextApiResponse<{ message: string, dels?: any }> // Response data type definition
 ) {
-  const session = await getServerSession(req, res, authOptions);
+  const session = await getServerSession(req, res, authOptions); // Get the session from the request
   if (!session && !session.user) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
   const { fileId } = req.query; // Extract fileId from request query parameters
 
+  // Find the file to delete
   const fileToDelete = await prisma.file.findUnique({
     where: {
       fileId: fileId as string,
@@ -53,7 +57,7 @@ export default async function handler(
     }
   });
 
-  if (!fileToDelete) {
+  if (!fileToDelete) { // Check if the file exists
     return res.status(404).json({ message: 'File not found' });
   }
 
@@ -84,7 +88,7 @@ export default async function handler(
       });
 
       
-
+      // Find all fileHashes that are not associated with any files
       const emptyHashes = await prisma.fileHash.findMany({
         where: {
           size: {
@@ -96,14 +100,14 @@ export default async function handler(
         }
       });
     
-      
+      // Delete the fileHashes
       for (const toDelHash of emptyHashes) {
         await sendDeleteRequest(toDelHash.path);
       }
 
 
 
-      res.status(200).json({ message: 'File successfully deleted', dels: emptyHashes });
+      res.status(200).json({ message: 'File successfully deleted', dels: emptyHashes }); // Send success response
     } else {
       // If the highest ancestor folder is not the "Bin" folder, move the file to the "Bin" folder
       await prisma.file.update({

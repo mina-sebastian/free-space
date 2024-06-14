@@ -31,7 +31,7 @@ const modalStyle = {
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: 'translate(-50%, -50%)',
+    transform: 'translate(-50%, -50%)', // Center the modal
     width: 400,
     bgcolor: 'background.paper',
     border: '2px solid #000',
@@ -39,44 +39,45 @@ const modalStyle = {
     p: 4,
 };
 
+// AdminPage component
 export default function AdminPage() {
-    const theme = useTheme();
-    const [users, setUsers] = useState([]);
-    const [anchorEl, setAnchorEl] = useState(null);
-    const [modalOpen, setModalOpen] = useState(false);
-    const [modalMessage, setModalMessage] = useState('');
-    const open = Boolean(anchorEl);
+    const theme = useTheme(); // Get the current theme
+    const [users, setUsers] = useState([]); // Initialize users state
+    const [anchorEl, setAnchorEl] = useState(null); // Initialize anchorEl state
+    const [modalOpen, setModalOpen] = useState(false); // Initialize modalOpen state
+    const [modalMessage, setModalMessage] = useState(''); // Initialize modalMessage state
+    const open = Boolean(anchorEl); // Determine if the anchorEl is open
 
-    useEffect(() => {
-        axios.get("/api/admin/getUsers")
-            .then(response => setUsers(response.data.users))
+    useEffect(() => { // Fetch users on component mount
+        axios.get("/api/admin/getUsers") // Fetch users from the API
+            .then(response => setUsers(response.data.users)) // Set the users state with the fetched data
             .catch(error => {
                 console.error("Error fetching users:", error);
-                showModal("Failed to fetch users.");
+                showModal("Failed to fetch users."); // Show modal with error message
             });
     }, []);
 
-    const showModal = (message) => {
+    const showModal = (message) => { // Function to show modal with message
         setModalMessage(message);
         setModalOpen(true);
     };
 
-    const handleCloseModal = () => {
+    const handleCloseModal = () => { // Function to close modal
         setModalOpen(false);
     };
 
-    const handleClick = (event, userId) => {
-        setAnchorEl({ anchor: event.currentTarget, userId: userId });
+    const handleClick = (event, userId) => { // Function to handle click on user menu
+        setAnchorEl({ anchor: event.currentTarget, userId: userId }); // Set the anchorEl state with the clicked target and userId
     };
 
-    const handleClose = () => {
+    const handleClose = () => { // Function to close the menu
         setAnchorEl(null);
     };
 
-    const deleteUser = (userId) => {
-        axios.post('/api/admin/editUsers', { userId, action: 'deleteUser' })
+    const deleteUser = (userId) => { // Function to delete user
+        axios.post('/api/admin/editUsers', { userId, action: 'deleteUser' }) // Send a POST request to the editUsers API with the userId and action
             .then(() => {
-                setUsers(users.filter(user => user.id !== userId));
+                setUsers(users.filter(user => user.id !== userId)); // Filter out the deleted user from the users state
                 showModal("User successfully deleted.");
                 handleClose();
             })
@@ -86,16 +87,16 @@ export default function AdminPage() {
             });
     };
 
-    const makeAdmin = (userId) => {
-        axios.post('/api/admin/editUsers', { userId, action: 'makeAdmin' })
+    const makeAdmin = (userId) => { // Function to make user admin
+        axios.post('/api/admin/editUsers', { userId, action: 'makeAdmin' }) // Send a POST request to the editUsers API with the userId and action
             .then(() => {
-                const updatedUsers = users.map(user => {
+                const updatedUsers = users.map(user => { // Map over the users and update the user with the new admin status
                     if (user.id === userId) {
-                        return { ...user, admin: true };
+                        return { ...user, admin: true }; // Set the user as admin
                     }
                     return user;
                 });
-                setUsers(updatedUsers);
+                setUsers(updatedUsers); // Set the users state with the updated users
                 showModal("User successfully made admin.");
                 handleClose();
             })
@@ -106,8 +107,8 @@ export default function AdminPage() {
     };
 
 
-    const { data: session, status } = useSession();
-    const router = useRouter();
+    const { data: session, status } = useSession(); // Get session data and status from next-auth
+    const router = useRouter(); // Initialize router for navigation
 
     useEffect(() => {
         // Check if the user is not logged in, does not exist in session, or is not an admin
@@ -135,14 +136,14 @@ export default function AdminPage() {
             <IconCard title={"Dashboard"} icon={<AdminPanelSettingsIcon sx={{ width: 56, height: 56, color: theme.palette.primary.contrastText }} />}>
                 <Container sx={{ mt: 5 }}>
                     <Grid container spacing={{ xs: 1, md: 3 }} columns={{ xs: 2, sm: 8, md: 12 }} sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        {users.map(user => (
+                        {users.map(user => ( // Map over the users
                             <Item key={user.email}>
                                 <Avatar sx={{ width: 100, height: 100, backgroundColor: 'transparent', marginRight: 'auto', marginLeft: 'auto', marginBottom: 2.5, marginTop: 2.5 }} src={user.image}/>
                                 <Typography variant="h6">{user.name}</Typography>
                                 <Typography variant="body2">{user.email}</Typography>
-                                {!user.admin && (
-                                    <div style={{ position: 'absolute', top: 0, right: 0 }}>
-                                        <IconButton aria-label="more" id={`button-${user.id}`} aria-haspopup="true" onClick={(e) => handleClick(e, user.id)}>
+                                {!user.admin && ( // Render the make admin button if the user is not an admin
+                                    <div style={{ position: 'absolute', top: 0, right: 0 }}> {}
+                                        <IconButton aria-label="more" id={`button-${user.id}`} aria-haspopup="true" onClick={(e) => handleClick(e, user.id)}> {/* Add click handler to the IconButton */}
                                             <MoreVertIcon />
                                         </IconButton>
                                         <Menu id={`menu-${user.id}`} anchorEl={anchorEl?.anchor} open={open && anchorEl?.userId === user.id} onClose={handleClose}>

@@ -3,13 +3,14 @@ import prisma from '../../../../libs/prismadb';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 
-
+// Define types for file and folder data
 type FolderType = {
   folderId: string;
   name: string;
   outerFolderId?: string | null;
 };
 
+// Define type for file data
 type FileType = {
   path: string;
   user: {
@@ -26,6 +27,7 @@ type FileType = {
   dimensiune: number;
 };
 
+// Define response data type
 type ResponseData = {
   folders: FolderType[];
   files: FileType[];
@@ -34,7 +36,7 @@ type ResponseData = {
 
 //generate a recursive folder where name = path[i]
 const generateRecursiveOuterFolder = (paths, sharedFolderId) => {
-  if (paths.length <= 1) {
+  if (paths.length <= 1) { // If there is only one path left
     return {
       name: paths[0],
       outerFolderId: sharedFolderId
@@ -42,28 +44,28 @@ const generateRecursiveOuterFolder = (paths, sharedFolderId) => {
   }
   return {
     name: paths[0],
-    outerFolder: generateRecursiveOuterFolder(paths.slice(1), sharedFolderId)
+    outerFolder: generateRecursiveOuterFolder(paths.slice(1), sharedFolderId) // Recursively generate outer folders
   };
 };
 
-export default async function handler(
+export default async function handler( // Default API handler function
     req: NextApiRequest, 
-    res: NextApiResponse<ResponseData | {message: string}>
+    res: NextApiResponse<ResponseData | {message: string}> // Response type that includes a message string and optionally a folder
   ) {
-    const session = await getServerSession(req, res, authOptions);
+    const session = await getServerSession(req, res, authOptions); // Retrieve the session using getServerSession with the provided authOptions
     
     // Extract linkId and path from the query
     const { pathLink }: { pathLink: string } = req.body;
 
-    const initPath = pathLink.split('/');
+    const initPath = pathLink.split('/'); // Split the pathLink by '/' to get the linkId and path
 
     const linkId = initPath[0];
-    const path = initPath.slice(1);
+    const path = initPath.slice(1); // Extract the linkId and path from the initPath
 
     // console.log("LINKID: " + linkId + ", PATH: " + initPath);
 
     
-  const link = await prisma.link.findUnique({
+  const link = await prisma.link.findUnique({ // Find the link by linkId
     where: {
       path: linkId,
     },
@@ -91,25 +93,25 @@ export default async function handler(
   });
 
   if(link.canSee == "AUTH" && !session){
-    return res.status(403).json({ message: "Unauthorized" });
+    return res.status(403).json({ message: "Unauthorized" }); // Return unauthorized if no session found
   }
 
 
   if(!link || !link.folderId){
-    return res.status(404).json({ message: "Link not found" });
+    return res.status(404).json({ message: "Link not found" }); // Return a 404 error if the link is not found
   }
 
-  let whereQuery = {};
+  let whereQuery = {}; // Initialize an empty object to store the folder query
   // console.log(path)
-  if(!path || path.length === 0){
+  if(!path || path.length === 0){ // If path is empty
     whereQuery = {
-      folderId: link.folderId
+      folderId: link.folderId // Filter folders by the provided folderId
     };
   }else{
-    whereQuery = generateRecursiveOuterFolder([...path].reverse(), link.folderId);
+    whereQuery = generateRecursiveOuterFolder([...path].reverse(), link.folderId); // Generate the outer folder query
   }
     
-  const folder = await prisma.folder.findFirst({
+  const folder = await prisma.folder.findFirst({ // Find the folder based on the query
     select: {
       folderId: true,
       name: true,

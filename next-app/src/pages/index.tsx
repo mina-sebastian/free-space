@@ -12,24 +12,25 @@ import WelcomeBg from '../../components/WelcomeBg';
 import { Typography } from '@mui/material';
 import IndexFileMenu from '../../components/main/IndexFileMenu';
 
+// Define the FolderPath component
 export default function FolderPath({ fetchedDataInit }) {
-  const session = useSession();
-  const router = useRouter();
-  const [fetchedData, setFetchedData] = React.useState<any>(fetchedDataInit);
-  const [refetchId, setRefetchId] = React.useState("initial");
+  const session = useSession(); // Initialize session for authentication
+  const router = useRouter(); // Initialize router for navigation
+  const [fetchedData, setFetchedData] = React.useState<any>(fetchedDataInit); // Initialize fetchedData state
+  const [refetchId, setRefetchId] = React.useState("initial"); // Initialize refetchId state
 
-  const getAllUserFilesAndFolders = async () => {
+  const getAllUserFilesAndFolders = async () => { // Function to get all user files and folders
     try {
-      const response = await axios.get('/api/folder/getAllUserFilesAndFolders');
-      setFetchedData(response.data);
+      const response = await axios.get('/api/folder/getAllUserFilesAndFolders'); // Send a GET request to the getAllUserFilesAndFolders API
+      setFetchedData(response.data); // Set the fetchedData state with the response data
     } catch (error) {
       console.error('Error getting all user files and folders:', error);
     }
   };
 
-  React.useEffect(() => {
+  React.useEffect(() => { // Fetch all user files and folders on component mount
     getAllUserFilesAndFolders();
-    setRefetchId(cuid2.createId());
+    setRefetchId(cuid2.createId()); // Generate a new refetchId
   }, []);
 
   return (
@@ -46,9 +47,9 @@ export default function FolderPath({ fetchedDataInit }) {
   );
 }
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps(context) { // Get server-side props
   const { req, res } = context;
-  const session = await getServerSession(req, res, authOptions);
+  const session = await getServerSession(req, res, authOptions); // Retrieve the session using getServerSession with the provided authOptions
   // if (!session) {
   //   return {
   //     redirect: {
@@ -58,7 +59,7 @@ export async function getServerSideProps(context) {
   //   };
   // }
 
-  const homeFolder = await prisma.folder.findFirst({
+  const homeFolder = await prisma.folder.findFirst({ // Find the home folder
     where: {
       userId: session?.user.id,
       outerFolderId: null,
@@ -66,7 +67,7 @@ export async function getServerSideProps(context) {
     },
   });
 
-  const binFolder = await prisma.folder.findFirst({
+  const binFolder = await prisma.folder.findFirst({ // Find the bin folder
     where: {
       userId: session?.user.id,
       outerFolderId: null,
@@ -75,7 +76,7 @@ export async function getServerSideProps(context) {
   });
 
   if (!homeFolder) {
-    await prisma.folder.create({
+    await prisma.folder.create({ // Create the home folder
       data: {
         name: "Home",
         userId: session?.user.id,
@@ -84,7 +85,7 @@ export async function getServerSideProps(context) {
   }
 
   if (!binFolder) {
-    await prisma.folder.create({
+    await prisma.folder.create({ // Create the bin folder
       data: {
         name: "Bin",
         userId: session?.user.id,
@@ -93,9 +94,9 @@ export async function getServerSideProps(context) {
   }
 
 
-  const files = await prisma.file.findMany({
+  const files = await prisma.file.findMany({ // Find all files
     where: {
-      userId: session ? session.user.id : "UNKNOWN_USER_ID",
+      userId: session ? session.user.id : "UNKNOWN_USER_ID", // Use the session user id or a placeholder
     },
     select: {
       fileId: true,

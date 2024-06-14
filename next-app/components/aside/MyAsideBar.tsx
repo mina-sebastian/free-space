@@ -9,7 +9,7 @@ import FolderListButtons from './FolderListButtons';
 import { useRouter } from 'next/router';
 import StorageUsage from './StorageUsage';
 
-const drawerWidth = 240;
+const drawerWidth = 240; // Define the width of the drawer
 
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -20,12 +20,12 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 }));
 
 export default function MyAsideBar({ currentlyOpen, open, setOpen, folderId, refetchId = 'initial' }) {
+  // Function to handle closing the drawer
   const handleDrawerClose = () => {
     setOpen(false);
   };
 
-  
-  const router = useRouter();
+  const router = useRouter(); // Initialize router for navigation
 
   return (
     <Drawer
@@ -39,30 +39,31 @@ export default function MyAsideBar({ currentlyOpen, open, setOpen, folderId, ref
       }}
       variant="persistent"
       anchor="left"
-      open={open}
+      open={open} // Control the open state of the drawer
     >
       <DrawerHeader>
         <IconButton onClick={handleDrawerClose}>
-          <ChevronLeftIcon />
+          <ChevronLeftIcon /> {/* Icon to close the drawer */}
         </IconButton>
       </DrawerHeader>
-      <Divider />
+      <Divider /> {/* Divider for separating sections */}
       <Box sx={{ overflow: 'auto' }}>
         <List>
+          {/* Conditionally render the AsideNewButton if the current path starts with '/f/Home' */}
           {router.asPath.startsWith('/f/Home') && (
             <ListItem disablePadding>
-              <AsideNewButton outerFolderId={folderId} />
+              <AsideNewButton outerFolderId={folderId} /> {/* Button to create a new item */}
             </ListItem>
           )}
           <ListItem>
-            <FolderListButtons currentlyOpen={currentlyOpen} refetchId={refetchId} />
+            <FolderListButtons currentlyOpen={currentlyOpen} refetchId={refetchId} /> {/* Component to display folder list */}
           </ListItem>
           <ListItem>
-            <StorageUsage />
+            <StorageUsage /> {/* Component to display storage usage */}
           </ListItem>
         </List>
       </Box>
-      <Divider />
+      <Divider /> {/* Divider for separating sections */}
     </Drawer>
   );
 }
