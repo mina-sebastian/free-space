@@ -2,6 +2,7 @@ import React, { useRef, useReducer, useCallback, useState, memo, useEffect } fro
 import { List, ListItem, Divider, Checkbox, FormControlLabel, Stack, IconButton, Menu, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import FileCard from '../cards/FileCard';
 import LinkGenerationModal from '../modals/LinkGenerationModal';
+import TagsModal from '../modals/TagsModal'; // Import the TagsModal component
 import DeleteIcon from '@mui/icons-material/Delete';
 import DriveFileMoveIcon from '@mui/icons-material/DriveFileMove';
 import { useRouter } from 'next/router';
@@ -176,12 +177,15 @@ const findSubfolders = (folderId: string, allFolders: Array<{ folderId: string; 
 const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) => {
   const modalRef = useRef(null); // Reference to LinkGenerationModal component
   const [state, dispatch] = useReducer(reducer, initialState); // State management using reducer
+  const [tagsModalOpen, setTagsModalOpen] = useState<boolean>(false);
   const router = useRouter(); // Next.js router hook
   const [userFolders, setUserFolders] = useState<Array<{ folderId: string; name: string; parentId?: string }>>([]); // State for user folders
   const [foldersMenuOpen, setFoldersMenuOpen] = useState(false); // State for folders menu open/close
   const [foldersMenuAnchorEl, setFoldersMenuAnchorEl] = useState<HTMLElement | null>(null); // Anchor element for folders menu
 
   const currentFolderId = router.query.folderId as string; // Current folder ID from router query parameter
+  const currentFolder = folders.find(folder => folder.folderId === currentFolderId);
+  const parentFolderId = currentFolder?.parentId;
 
   // Effect to reset selected items and checkboxes on route change
   useEffect(() => {
@@ -202,6 +206,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
   // Handle click event on menu items
   const handleMenuClick = useCallback((event: React.MouseEvent<HTMLElement>, itemId: string, itemType: 'folder' | 'file', name: string) => {
     dispatch({ type: 'SET_ANCHOR_EL', anchorEl: event.currentTarget });
+    console.log({ itemId, itemType, name })
     dispatch({ type: 'SET_SELECTED_ITEM', selectedItem: { itemId, itemType, name } });
   }, []);
 
@@ -327,6 +332,27 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
     // Close the menu after deletion
     handleMenuClose();
   }, [state.checkedFolders, router, handleMenuClose]);
+  
+  const handleTagsModalOpen = useCallback(() => {
+    // console.log(state.selectedItem)
+    setTagsModalOpen(true);
+  }, []);
+
+  const handleTagsModalClose = useCallback(() => {
+    setTagsModalOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const fetchUserFolders = async () => {
+      try {
+        const response = await axios.get('/api/folder/getFolders');
+        setUserFolders(response.data.folders);
+      } catch (error) {
+        console.error('Error fetching user folders:', error);
+      }
+    };
+    fetchUserFolders();
+  }, []);
 
   // Handle open folders menu
   const handleOpenFoldersMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -380,6 +406,9 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
   // Filter available destination folders for moving folders
   const availableDestinationFolders = userFolders.filter(folder => {
     const allSubfolders = state.checkedFolders.flatMap(checkedFolderId => findSubfolders(checkedFolderId, userFolders)); // Find all subfolders of selected folders
+    const isInCurrentOrParentFolder = folder.parentId === currentFolderId || folder.parentId === parentFolderId;
+    const isBinFolder = folder.name.toLowerCase() === 'bin';
+    return (!state.checkedFolders.includes(folder.folderId) && !allSubfolders.includes(folder.folderId)) && (isInCurrentOrParentFolder || isBinFolder);
     return !state.checkedFolders.includes(folder.folderId) && !allSubfolders.includes(folder.folderId); // Exclude selected folders and their subfolders
   });
 
@@ -422,6 +451,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
   return (
     <div>
       <LinkGenerationModal ref={modalRef} /> 
+      <TagsModal open={tagsModalOpen} onClose={handleTagsModalClose} fileId={state.selectedItem?.itemId || ''} />
       <SearchBar searchQuery={state.searchQuery} onSearchQueryChange={handleSearchQueryChange} /> 
       <h2>Folders</h2>
       <Stack direction="row" alignItems="center" spacing={2}>
@@ -444,8 +474,8 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
               open={foldersMenuOpen}
               onClose={handleCloseFoldersMenu}
             >
-              {availableDestinationFolders
-                .filter(folder => folder.folderId !== currentFolderId) // Exclude the current folder
+              {availableDestinationFolders // Exclude the current folder and the child folders of the curent folder
+                .filter(folder => folder.folderId !== currentFolderId && folder.folderId !== parentFolderId)
                 .map(folder => ( // Map available destination folders to menu items
                   <MenuItem key={folder.folderId} onClick={() => handleMoveFolders(folder.folderId)}>
                     {folder.name}
@@ -529,6 +559,7 @@ const FileMenu: React.FC<FileMenuProps> = ({ folders, files, canEdit, linkId }) 
         <Menu id="menu" anchorEl={state.anchorEl} open={Boolean(state.anchorEl)} onClose={handleMenuClose}>
           {(router.asPath.startsWith('/f/Home') || canEdit === true) && <MenuItem onClick={handleRenameItem}>Rename</MenuItem>}
           {<MenuItem onClick={handleDeleteItem}>Delete</MenuItem>}
+          {router.asPath.startsWith('/f/Home') && state.selectedItem?.itemType === 'file' && <MenuItem onClick={handleTagsModalOpen}>Tags</MenuItem>}
           {router.asPath.startsWith('/f/Home') && <MenuItem onClick={() => state.selectedItem && modalRef.current?.open(state.selectedItem.itemType, state.selectedItem.itemId, state.selectedItem.name)}>Share</MenuItem>}
         </Menu>
       )}
@@ -548,8 +579,8 @@ const MemoizedListItem = memo(({ folder, file, state, dispatch, canEdit, handleM
         checked={state.checkedFolders.includes(item.folderId) || state.checkedFiles.includes(item.fileId)}
         onChange={() => dispatch({ type: itemType === 'folder' ? 'TOGGLE_FOLDER' : 'TOGGLE_FILE', folderId: item.folderId, fileId: item.fileId })}
       />
-      <FileCard link={file ? (linkId ? `${file.fileId}?q=${linkId}` : file.fileId) : ""} itemId={itemType === 'folder' ? item.folderId : item.fileId} itemType={itemType} name={item.name} onShare={() => modalRef.current?.open()} onMenuClick={(event) => handleMenuClick(event, itemType === 'folder' ? item.folderId : item.fileId, itemType, item.name)} canEdit={canEdit} />
-    </ListItem>
+
+  <FileCard link={file ? linkId ? `${file.fileId}?q=${linkId}` : file.fileId : ""} itemId={item.folderId || item.fileId} itemType={itemType} name={item.name} onShare={() => modalRef.current?.open()} onMenuClick={(event) => handleMenuClick(event, itemType == "folder" ? item.folderId : item.fileId, itemType, item.name)} canEdit={canEdit} />    </ListItem>
   );
 });
 
