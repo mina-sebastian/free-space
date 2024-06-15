@@ -33,7 +33,7 @@ const TagsModal = ({ open, onClose, fileId }) => {
   // Function to add a new tag
   const handleAddTag = () => {
     if (newTag.trim()) {
-      axios.post(`/api/file/${fileId}/tags`, { action: 'add', fileId, tagName: newTag }) // Add tag to the file
+      axios.post(`/api/file/${fileId}/tags`, { action: 'add', fileId, tagNameConst: newTag }) // Add tag to the file
         .then(response => {
           setTags([...tags, response.data]);
           setNewTag('');
@@ -45,10 +45,10 @@ const TagsModal = ({ open, onClose, fileId }) => {
   };
 
   // Function to remove a tag
-  const handleRemoveTag = (tagName) => {
-    axios.post(`/api/file/${fileId}/tags`, { action: 'remove', fileId, tagName }) // Remove tag from the file
+  const handleRemoveTag = (tagNameConst) => {
+    axios.post(`/api/file/${fileId}/tags`, { action: 'remove', fileId, tagNameConst }) // Remove tag from the file
       .then(response => {
-        setTags(tags.filter(tag => tag.name !== tagName));
+        setTags(tags.filter(tag => tag.name !== tagNameConst));
       })
       .catch(error => console.error('Error removing tag:', error));
   };
